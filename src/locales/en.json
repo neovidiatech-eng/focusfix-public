@@ -1,0 +1,162 @@
+{
+  "nav": {
+    "home": "Home",
+    "services": "Services",
+    "prices": "Prices",
+    "book": "Book an iFixer",
+    "join": "Join iFix",
+    "warranty": "Warranty",
+    "about": "About Us",
+    "whyUs": "Why Us",
+    "contact": "Contact Us",
+    "callNow": "Call Now"
+  },
+  "hero": {
+    "title1": "Broken iPhone? We come to you",
+    "title2": "and  fix  it  in  just  30  minutes!!",
+    "description": "Fastest iPhone repair service in Egypt. Whatever your iPhone's problem, we come to your location and fix it in front of you using original parts and latest tools, with a one-year warranty.",
+    "whatsapp": "WhatsApp",
+    "callUs": "Call Us"
+  },
+  "services": {
+    "badge": "Our Services",
+    "title": "What's the problem?",
+    "description": "We specialize in repairing all iPhone models with the latest technologies and original spare parts.",
+    "screen": {
+      "title": "Screen Issues",
+      "desc": "Screen broken or cracked? We change it at your location with the highest quality."
+    },
+    "battery": {
+      "title": "Battery Issues",
+      "desc": "Battery draining fast? We replace it with a real warranty and excellent performance."
+    },
+    "back": {
+      "title": "Back Glass Issues",
+      "desc": "Back glass broken? We replace it with laser technology, and it looks brand new."
+    },
+    "camera": {
+      "title": "Camera Issues",
+      "desc": "Camera not working or blurry? We fix it and it will take great photos again."
+    },
+    "motherboard": {
+      "title": "Motherboard Issues",
+      "desc": "Phone not turning on or short circuit? Our experts fix the most complex board issues."
+    },
+    "orderNow": "Order Now"
+  },
+  "process": {
+    "badge": "How we work?",
+    "title": "Simple steps for a new phone",
+    "step1": { "title": "Contact Us", "desc": "Call us or WhatsApp and explain your phone's problem." },
+    "step2": { "title": "We Come to You", "desc": "A specialized technician comes to your home or office as soon as possible." },
+    "step3": { "title": "Instant Repair", "desc": "We fix the fault in front of you in less than 30 minutes with high precision." },
+    "step4": { "title": "Real Warranty", "desc": "You receive your phone working perfectly with a one-year warranty on maintenance." }
+  },
+  "about": {
+    "badge": "About Us",
+    "title": "Focus Store",
+    "description1": "In iPhone repair, experience is the real difference. At FOCUS, we have over 12 years of specialized experience in repairing iPhones. Over these years, we have gained the trust of thousands of customers after restoring their devices to peak performance. Our commitment to quality, precision, and speed is what makes our name grow day by day.",
+    "description2": "Our passion for repair makes us always enjoy discovering new problems and faults, even if they are complex, which keeps us ahead in iPhone repair. Our customers always trust us for the quality and professionalism we provide.",
+    "experience": "+12",
+    "years": "Years Experience",
+    "specialty": "In iPhone Repair",
+    "contactBtn": "Contact Us Now"
+  },
+  "whyUs": {
+    "badge": "Why Us?",
+    "title": "Why Choose Focus Store?",
+    "item1": { "title": "30 Minute Repair", "desc": "Fastest repair service in Egypt, we finish your device in less than half an hour." },
+    "item2": { "title": "Home Repair", "desc": "We come to your door and fix the phone in front of you with complete safety." },
+    "item3": { "title": "Original Spare Parts", "desc": "We use original spare parts with a real warranty of up to 3 months." },
+    "item4": { "title": "Modern Tools", "desc": "We use the latest machines and tools to ensure the highest precision in maintenance." },
+    "stats": {
+      "screen": "Screens Repaired",
+      "motherboard": "Motherboards Fixed",
+      "battery": "Batteries Replaced",
+      "back": "Back Housing Repaired"
+    }
+  },
+  "problems": {
+    "badge": "Common Faults",
+    "title": "Major iPhone Problems We Fix",
+    "screen": {
+      "title": "iPhone Screen Issues",
+      "items": ["Broken or cracked screen", "Screen colors are corrupted", "Outer glass broken", "Touch not working"]
+    },
+    "battery": {
+      "title": "Battery Issues",
+      "items": ["Battery overheating", "Swollen battery", "Battery draining fast"]
+    },
+    "back": {
+      "title": "Back Housing Issues",
+      "items": ["Back broken", "Back cracked", "Wireless Charging not working"]
+    },
+    "camera": {
+      "title": "Camera Issues",
+      "items": ["Camera not working", "Camera blurry"]
+    },
+    "motherboard": {
+      "title": "Motherboard Issues",
+      "items": [
+        "Phone fell in water",
+        "Phone keeps restarting",
+        "Screen flickering or cutting out",
+        "Phone overheating while charging",
+        "Audio issues",
+        "Weak or no signal",
+        "Wifi not working",
+        "Face ID not working"
+      ]
+    }
+  },
+  "slider": {
+    "title": "Quality We Trust, Results You Can See",
+    "description": "Our services are characterized by precision and professionalism. We care about the smallest details to ensure customer satisfaction and restore your devices to their original state.",
+    "result": "Final Result"
+  },
+  "contact": {
+    "badge": "Contact Us",
+    "title": "We'd Love to Hear from You",
+    "form": {
+      "name": "Name",
+      "namePlaceholder": "Enter your name",
+      "phone": "Phone Number",
+      "phonePlaceholder": "01xxxxxxxxx",
+      "email": "Email",
+      "emailPlaceholder": "Enter your email",
+      "deviceType": "Device Type",
+      "deviceSelect": "Select Device Type",
+      "issueType": "Issue Type",
+      "issueSelect": "Select Issue Type",
+      "details": "Details",
+      "detailsPlaceholder": "Explain the problem in detail...",
+      "submit": "Submit Request",
+      "other": "Other",
+      "screen": "Broken Screen",
+      "battery": "Battery Issue",
+      "back": "Broken Back Housing",
+      "camera": "Camera Issue"
+    },
+    "info": {
+      "title": "Contact Information",
+      "whatsapp": "WhatsApp",
+      "phone": "Phone",
+      "email": "Email",
+      "location": "Location",
+      "address": "Building 47, Dokki Street, Dokki Square - Giza - Egypt"
+    },
+    "messages": {
+      "success": "Your request has been sent successfully!",
+      "error": "Sending failed, please try again.",
+      "nameError": "Name must be at least 3 characters",
+      "phoneError": "Invalid Egyptian phone number",
+      "emailError": "Invalid email address",
+      "deviceError": "Please select device type",
+      "issueError": "Please select issue type"
+    }
+  },
+  "footer": {
+    "rights": "All rights reserved © 2026 FOCUS - Fastest Mobile Repair",
+    "developedBy": "Designed and developed by"
+  }
+}
