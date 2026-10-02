@@ -158,8 +158,45 @@
       "issueError": "Please select issue type"
     }
   },
+  "pricesPage": {
+    "badge": "Transparent & Includes Doorstep Installation",
+    "title": "Apple Repair Pricing Matrix",
+    "highlight": "Original Parts",
+    "desc": "All prices include technician arrival at your location and genuine spare parts with warranty from 6 months up to 1 full year.",
+    "searchPlaceholder": "Search model (e.g. 15 Pro Max)...",
+    "seriesBadge": "Genuine OEM Parts",
+    "colModel": "Device Model",
+    "colScreen": "Screen Replacement",
+    "colBattery": "Battery Replacement",
+    "colBack": "Back Glass Repair",
+    "colCamera": "Camera Repair",
+    "colAction": "Instant Booking",
+    "bookNow": "Book Now",
+    "egp": "EGP",
+    "warranty6m": "6 Months Warranty",
+    "warranty12m": "12 Months Warranty",
+    "warranty3m": "3 Months Warranty"
+  },
+  "warrantyPage": {
+    "badge": "Official FocusFix Warranty",
+    "title": "Reliable Repair with",
+    "highlight": "Longest Warranty in Egypt",
+    "desc": "We fully trust our genuine parts and certified engineers, providing you a written warranty for complete peace of mind.",
+    "screensTitle": "360 Days Screen Warranty",
+    "screensDesc": "Covers full touch response, brightness and dead pixels, color stability and True Tone transfer at zero extra cost.",
+    "screensPeriod": "12 Full Months",
+    "batteriesTitle": "6 Months Battery Warranty",
+    "batteriesDesc": "Covers abnormal battery drain, sudden power-offs, and rapid capacity decline.",
+    "batteriesPeriod": "6 Months",
+    "portsTitle": "90 Days Internal Parts Warranty",
+    "portsDesc": "Includes charging ports, rear and front cameras, microphone and earpieces against manufacturing defects.",
+    "portsPeriod": "3 Months",
+    "claimTitle": "How to claim your warranty?",
+    "claimDesc": "Simply contact our support team with your booking code or phone number, and a technician will visit you to resolve the issue for free.",
+    "claimBtn": "Claim Warranty via WhatsApp"
+  },
   "footer": {
-    "rights": "All rights reserved © 2026 FOCUS - Fastest Mobile Repair",
+    "rights": "All rights reserved © 2026 FocusFix - Doorstep Apple Repair",
     "developedBy": "Designed and developed by"
   }
 }

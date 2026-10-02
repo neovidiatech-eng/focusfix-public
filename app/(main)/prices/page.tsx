@@ -13,8 +13,10 @@ import {
   HelpCircle,
 } from 'lucide-react';
 import { InnerHero } from '@/src/shared/components/ui/InnerHero';
+import { useTranslation } from 'react-i18next';
 
 export default function PricesPage() {
+  const { t, i18n } = useTranslation();
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState<'iphone' | 'ipad' | 'watch'>('iphone');
 
@@ -139,14 +141,14 @@ export default function PricesPage() {
     <div className="min-h-screen bg-slate-50 pb-20">
       <InnerHero
         breadcrumb={[
-          { label: "الرئيسية", href: "/" },
-          { label: "قائمة الأسعار والضمانات" },
+          { label: t("nav.home"), href: "/" },
+          { label: t("pricesPage.title") },
         ]}
-        badge="تسعير شفاف وشامل التركيب المنزلي"
+        badge={t("pricesPage.badge")}
         badgeIcon={<ShieldCheck className="w-4 h-4 text-emerald-600" />}
-        title="جدول أسعار صيانة أجهزة"
-        highlightedTitle="Apple الأصلية"
-        description="جميع الأسعار تشمل انتقال الفني إلى موقعك وقطع غيار أصلية مع ضمان معتمد يبدأ من 6 شهور حتى عام كامل بدون أي رسوم خفية."
+        title={t("pricesPage.title")}
+        highlightedTitle={t("pricesPage.highlight")}
+        description={t("pricesPage.desc")}
       />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-20 space-y-10">
@@ -160,7 +162,7 @@ export default function PricesPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="ابحث عن موديلك (مثال: 15 pro max)..."
+              placeholder={t("pricesPage.searchPlaceholder")}
               className="w-full pl-4 pr-10 py-2.5 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
@@ -171,17 +173,17 @@ export default function PricesPage() {
               { id: 'iphone', label: 'iPhone' },
               { id: 'ipad', label: 'iPad' },
               { id: 'watch', label: 'Apple Watch' },
-            ].map((t) => (
+            ].map((tItem) => (
               <button
-                key={t.id}
-                onClick={() => setActiveTab(t.id as any)}
+                key={tItem.id}
+                onClick={() => setActiveTab(tItem.id as any)}
                 className={`flex-1 md:flex-none px-5 py-2.5 rounded-xl text-xs font-bold transition-colors ${
-                  activeTab === t.id
+                  activeTab === tItem.id
                     ? 'bg-slate-900 text-white shadow-sm'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
-                {t.label}
+                {tItem.label}
               </button>
             ))}
           </div>
@@ -198,7 +200,7 @@ export default function PricesPage() {
                 {/* Series Banner */}
                 <div className="bg-slate-900 text-white px-6 py-3.5 flex items-center justify-between">
                   <h2 className="font-bold text-sm tracking-wide">{sGroup.series}</h2>
-                  <span className="text-xs text-emerald-400 font-semibold">قطع غيار أصلية</span>
+                  <span className="text-xs text-emerald-400 font-semibold">{t("pricesPage.seriesBadge")}</span>
                 </div>
 
                 {/* Desktop Table View */}
@@ -206,12 +208,12 @@ export default function PricesPage() {
                   <table className="w-full text-right text-sm border-collapse">
                     <thead className="bg-slate-50 text-slate-700 font-bold border-b border-slate-200 text-xs">
                       <tr>
-                        <th className="py-3 px-5">الموديل</th>
-                        <th className="py-3 px-4 text-center">تغيير شاشة أصلية</th>
-                        <th className="py-3 px-4 text-center">تغيير بطارية أصلية</th>
-                        <th className="py-3 px-4 text-center">تغيير ظهر ليزر</th>
-                        <th className="py-3 px-4 text-center">صيانة الكاميرا</th>
-                        <th className="py-3 px-5 text-center">حجز فوري</th>
+                        <th className="py-3 px-5">{t("pricesPage.colModel")}</th>
+                        <th className="py-3 px-4 text-center">{t("pricesPage.colScreen")}</th>
+                        <th className="py-3 px-4 text-center">{t("pricesPage.colBattery")}</th>
+                        <th className="py-3 px-4 text-center">{t("pricesPage.colBack")}</th>
+                        <th className="py-3 px-4 text-center">{t("pricesPage.colCamera")}</th>
+                        <th className="py-3 px-5 text-center">{t("pricesPage.colAction")}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -261,8 +263,8 @@ export default function PricesPage() {
                               href={`/book?model=${m.id}`}
                               className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm inline-flex items-center gap-1.5 transition-colors"
                             >
-                              <span>احجز الآن</span>
-                              <ArrowLeft className="w-3.5 h-3.5" />
+                              <span>{t("pricesPage.bookNow")}</span>
+                              <ArrowLeft className="w-3.5 h-3.5 rtl:rotate-0 ltr:rotate-180" />
                             </Link>
                           </td>
                         </tr>
