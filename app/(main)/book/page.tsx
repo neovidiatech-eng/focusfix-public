@@ -19,6 +19,7 @@ import {
   Navigation,
   Check,
 } from 'lucide-react';
+import { InnerHero } from '@/src/shared/components/ui/InnerHero';
 
 export default function BookPage() {
   const router = useRouter();
@@ -225,20 +226,20 @@ export default function BookPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-28 pb-20 px-4 sm:px-6">
-      <div className="max-w-4xl mx-auto">
-        {/* Page Header */}
-        <div className="text-center mb-8">
-          <span className="text-xs font-bold px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full inline-block mb-2">
-            صيانة فورية أمامك في مكانك
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900">
-            احجز فني الصيانة في 4 خطوات بسيطة
-          </h1>
-          <p className="text-slate-500 text-sm mt-1 max-w-lg mx-auto">
-            الفني يصلك في أي مكان بالقاهرة والجيزة ويصلح جهازك في 30 دقيقة مع ضمان معتمد
-          </p>
-        </div>
+    <div className="min-h-screen bg-slate-50 pb-20">
+      <InnerHero
+        breadcrumb={[
+          { label: "الرئيسية", href: "/" },
+          { label: "حجز موعد صيانة منزلية" },
+        ]}
+        badge="صيانة فورية أمامك في مكانك"
+        badgeIcon={<ShieldCheck className="w-4 h-4 text-emerald-600" />}
+        title="احجز فني الصيانة في"
+        highlightedTitle="4 خطوات سريعة"
+        description="الفني المعتمد يصلك في أي مكان بالقاهرة والجيزة ويصلح جهازك في أقل من 30 دقيقة أمام عينك بقطع غيار أصلية وضمان رسمي."
+      />
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-20">
 
         {/* Stepper Header */}
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 mb-8">

@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { MapPin, ArrowRight, ShieldCheck, Clock, CheckCircle2, Phone } from "lucide-react";
+import { InnerHero } from "@/src/shared/components/ui/InnerHero";
 
 export const metadata: Metadata = {
   title: "المناطق المشمولة بالصيانة المنزلية في القاهرة والجيزة | FocusFix",
@@ -106,22 +107,19 @@ const AREAS_DATA = [
 
 export default function AreasIndexPage() {
   return (
-    <div className="min-h-screen bg-slate-50 pt-28 pb-20">
-      {/* Hero section */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-16">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-50 border border-brand-200 text-brand-700 text-xs font-bold mb-4">
-          <MapPin className="w-4 h-4 text-brand-600" />
-          تغطية كاملة للقاهرة الكبرى والجيزة
-        </div>
-        <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight mb-4">
-          صيانة أبل الفورية <span className="text-brand-600">عند باب بيتك</span>
-        </h1>
-        <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-          فريق فنيي FocusFix المتخصص يصلك أينما كنت في أسرع وقت. نصلح شاشات وبطاريات الآيفون وأجهزة أبل أمام عينك بقطع غيار أصلية وضمان معتمد.
-        </p>
-
-        {/* Value props badges */}
-        <div className="mt-8 flex flex-wrap justify-center items-center gap-6 text-sm font-semibold text-slate-700">
+    <div className="min-h-screen bg-slate-50 pb-20">
+      <InnerHero
+        breadcrumb={[
+          { label: "الرئيسية", href: "/" },
+          { label: "مناطق التغطية والزيارات" },
+        ]}
+        badge="تغطية كاملة للقاهرة الكبرى والجيزة"
+        badgeIcon={<MapPin className="w-4 h-4 text-brand-600" />}
+        title="صيانة أبل الفورية"
+        highlightedTitle="عند باب بيتك"
+        description="فريق فنيي FocusFix المتخصص يصلك أينما كنت في أسرع وقت. نصلح شاشات وبطاريات الآيفون وأجهزة أبل أمام عينك بقطع غيار أصلية وضمان معتمد."
+      >
+        <div className="flex flex-wrap justify-center items-center gap-4 text-xs sm:text-sm font-semibold text-slate-700">
           <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow-xs border border-slate-200">
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             <span>رسوم انتقال مجانية تماماً (0 ج.م)</span>
@@ -135,10 +133,10 @@ export default function AreasIndexPage() {
             <span>تصليح فوري خلال 25 دقيقة</span>
           </div>
         </div>
-      </div>
+      </InnerHero>
 
       {/* Grid of Areas */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {AREAS_DATA.map((area) => (
             <Link

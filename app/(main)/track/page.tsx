@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Search, ShieldCheck, Clock, MapPin, CheckCircle2, AlertCircle, Phone, Calendar } from "lucide-react";
 import Link from "next/link";
+import { InnerHero } from "@/src/shared/components/ui/InnerHero";
 
 export default function TrackBookingPage() {
   const [bookingCode, setBookingCode] = useState("");
@@ -86,21 +87,20 @@ export default function TrackBookingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-28 pb-20">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6">
-        {/* Header */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-50 border border-brand-200 text-brand-700 text-xs font-bold mb-3">
-            <Search className="w-3.5 h-3.5" />
-            خدمة عملاء FocusFix
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight mb-3">
-            متابعة حالة الحجز والصيانة
-          </h1>
-          <p className="text-sm sm:text-base text-slate-600">
-            أدخل كود الحجز المستلم في رسالة التأكيد لمعرفة حالة فني الصيانة وموعد الزيارة.
-          </p>
-        </div>
+    <div className="min-h-screen bg-slate-50 pb-20">
+      <InnerHero
+        breadcrumb={[
+          { label: "الرئيسية", href: "/" },
+          { label: "تتبع حالة الحجز" },
+        ]}
+        badge="خدمة عملاء ومتابعة FocusFix"
+        badgeIcon={<Search className="w-3.5 h-3.5 text-brand-600" />}
+        title="متابعة حالة الحجز وزيارة"
+        highlightedTitle="فني الصيانة"
+        description="أدخل كود الحجز المرجعي المستلم في رسالة التأكيد (مثال: FM-2026-00101) للاطلاع على موعد الزيارة المحدد وحالة الفني في الطريق."
+      />
+
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 -mt-6 relative z-20">
 
         {/* Search Card */}
         <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs mb-8">

@@ -12,6 +12,7 @@ import {
   CheckCircle,
   HelpCircle,
 } from 'lucide-react';
+import { InnerHero } from '@/src/shared/components/ui/InnerHero';
 
 export default function PricesPage() {
   const [search, setSearch] = useState('');
@@ -135,20 +136,20 @@ export default function PricesPage() {
   }, [cleanSearch]);
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-28 pb-20 px-4 sm:px-6">
-      <div className="max-w-6xl mx-auto space-y-10">
-        {/* Header */}
-        <div className="text-center max-w-2xl mx-auto space-y-3">
-          <span className="text-xs font-bold px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full inline-block">
-            أسعار شفافة ومحدثة تشمل التركيب في مكانك
-          </span>
-          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 leading-tight">
-            أسعار صيانة أجهزة Apple في القاهرة والجيزة
-          </h1>
-          <p className="text-slate-500 text-sm leading-relaxed">
-            جميع الأسعار تشمل انتقال الفني إلى موقعك وقطع غيار أصلية مع ضمان معتمد من FocusFix
-          </p>
-        </div>
+    <div className="min-h-screen bg-slate-50 pb-20">
+      <InnerHero
+        breadcrumb={[
+          { label: "الرئيسية", href: "/" },
+          { label: "قائمة الأسعار والضمانات" },
+        ]}
+        badge="تسعير شفاف وشامل التركيب المنزلي"
+        badgeIcon={<ShieldCheck className="w-4 h-4 text-emerald-600" />}
+        title="جدول أسعار صيانة أجهزة"
+        highlightedTitle="Apple الأصلية"
+        description="جميع الأسعار تشمل انتقال الفني إلى موقعك وقطع غيار أصلية مع ضمان معتمد يبدأ من 6 شهور حتى عام كامل بدون أي رسوم خفية."
+      />
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-20 space-y-10">
 
         {/* Search & Tabs Toolbar */}
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
