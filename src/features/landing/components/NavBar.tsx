@@ -32,8 +32,9 @@ export const Navbar = () => {
     { name: t("nav.home"), href: "/" },
     { name: t("nav.services"), href: "/services" },
     { name: t("nav.prices", "Prices"), href: "/prices" },
-    { name: t("nav.book", "Book an iFixer"), href: "/book" },
-    { name: t("nav.join", "Join iFix"), href: "/join" },
+    { name: t("nav.areas", "المناطق"), href: "/areas" },
+    { name: t("nav.blog", "المدونة"), href: "/blog" },
+    { name: t("nav.book", "احجز صيانة"), href: "/book" },
     { name: t("nav.warranty", "Warranty"), href: "/warranty" },
   ];
 
