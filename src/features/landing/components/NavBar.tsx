@@ -7,6 +7,7 @@ import { Button } from "@/src/shared/components/ui/neon-button";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { TopAnnouncementBar } from "./TopAnnouncementBar";
 
 export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -40,8 +41,10 @@ export const Navbar = () => {
   ];
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled || isMenuOpen ? "glass py-3 shadow-sm" : "bg-transparent py-4 md:py-6"}`}>
-      <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+    <div className="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
+      <TopAnnouncementBar />
+      <nav className={`${isScrolled || isMenuOpen ? "glass py-3 shadow-sm" : "bg-transparent py-4 md:py-6"}`}>
+        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <img src="/logo1.jpeg" alt="Focus Repair Logo" className="w-30 h-12 object-cover  rounded-xl" />
         </div>
@@ -130,5 +133,6 @@ export const Navbar = () => {
         )}
       </AnimatePresence>
     </nav>
+  </div>
   );
 };
