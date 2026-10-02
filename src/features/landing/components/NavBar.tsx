@@ -34,6 +34,7 @@ export const Navbar = () => {
     { name: t("nav.prices", "Prices"), href: "/prices" },
     { name: t("nav.areas", "المناطق"), href: "/areas" },
     { name: t("nav.blog", "المدونة"), href: "/blog" },
+    { name: t("nav.track", "تتبع حجزك"), href: "/track" },
     { name: t("nav.book", "احجز صيانة"), href: "/book" },
     { name: t("nav.warranty", "Warranty"), href: "/warranty" },
   ];
