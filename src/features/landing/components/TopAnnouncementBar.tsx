@@ -4,19 +4,28 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Zap, ChevronLeft } from "lucide-react";
 
+import { useTranslation } from "react-i18next";
+
 interface TopBannerData {
   enabled: boolean;
-  text: string;
-  badge: string;
+  textAr: string;
+  textEn: string;
+  badgeAr: string;
+  badgeEn: string;
   link: string;
   bgColor: string;
 }
 
 export const TopAnnouncementBar = () => {
+  const { i18n } = useTranslation();
+  const currentLang = i18n.language || "ar";
+
   const [banner, setBanner] = useState<TopBannerData>({
     enabled: true,
-    text: "خصم حصري 15% على صيانة أجهزة آيفون اليوم + كشف فوري وقطع غيار أصلية بضمان عام كامل",
-    badge: "خدمة الطوارئ متوفرة الآن 24/7",
+    textAr: "خصم حصري 15% على صيانة أجهزة آيفون اليوم + كشف فوري وقطع غيار أصلية بضمان عام كامل",
+    textEn: "Exclusive 15% OFF iPhone repairs today + instant inspection & genuine parts with 1-Year warranty",
+    badgeAr: "خدمة الطوارئ متوفرة الآن 24/7",
+    badgeEn: "Emergency 24/7 Service Available",
     link: "/book",
     bgColor: "amber",
   });
@@ -32,8 +41,10 @@ export const TopAnnouncementBar = () => {
           if (data.banner_enabled !== undefined) {
             setBanner({
               enabled: data.banner_enabled === "true" || data.banner_enabled === true,
-              text: data.banner_text || "خصم حصري 15% على صيانة أجهزة آيفون اليوم + كشف فوري وقطع غيار أصلية بضمان عام كامل",
-              badge: data.banner_badge || "خدمة الطوارئ متوفرة الآن 24/7",
+              textAr: data.banner_text || "خصم حصري 15% على صيانة أجهزة آيفون اليوم + كشف فوري وقطع غيار أصلية بضمان عام كامل",
+              textEn: data.banner_text_en || "Exclusive 15% OFF iPhone repairs today + instant inspection & genuine parts with 1-Year warranty",
+              badgeAr: data.banner_badge || "خدمة الطوارئ متوفرة الآن 24/7",
+              badgeEn: data.banner_badge_en || "Emergency 24/7 Service Available",
               link: data.banner_link || "/book",
               bgColor: data.banner_bg_color || "amber",
             });
@@ -57,12 +68,12 @@ export const TopAnnouncementBar = () => {
       >
         <span className="flex items-center gap-1.5 text-center">
           <Zap className="w-4 h-4 fill-amber-900 text-amber-900 shrink-0" />
-          <span>{banner.text}</span>
+          <span>{currentLang === "en" ? banner.textEn : banner.textAr}</span>
         </span>
 
-        {banner.badge && (
+        {(currentLang === "en" ? banner.badgeEn : banner.badgeAr) && (
           <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full bg-slate-950/85 text-amber-300 text-[11px] font-extrabold shadow-xs shrink-0">
-            <span>{banner.badge}</span>
+            <span>{currentLang === "en" ? banner.badgeEn : banner.badgeAr}</span>
             <ChevronLeft className="w-3 h-3 rtl:rotate-0" />
           </span>
         )}

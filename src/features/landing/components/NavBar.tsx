@@ -32,12 +32,12 @@ export const Navbar = () => {
   const navLinks = [
     { name: t("nav.home"), href: "/" },
     { name: t("nav.services"), href: "/services" },
-    { name: t("nav.prices", "Prices"), href: "/prices" },
-    { name: t("nav.areas", "المناطق"), href: "/areas" },
-    { name: t("nav.blog", "المدونة"), href: "/blog" },
-    { name: t("nav.track", "تتبع حجزك"), href: "/track" },
-    { name: t("nav.book", "احجز صيانة"), href: "/book" },
-    { name: t("nav.warranty", "Warranty"), href: "/warranty" },
+    { name: t("nav.prices"), href: "/prices" },
+    { name: t("nav.areas"), href: "/areas" },
+    { name: t("nav.blog"), href: "/blog" },
+    { name: t("nav.track"), href: "/track" },
+    { name: t("nav.book"), href: "/book" },
+    { name: t("nav.warranty"), href: "/warranty" },
   ];
 
   return (
