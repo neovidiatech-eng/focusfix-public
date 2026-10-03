@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -15,7 +15,7 @@ import {
   Download,
 } from 'lucide-react';
 
-export default function BookingSuccessPage() {
+function BookingSuccessContent() {
   const searchParams = useSearchParams();
   const bookingNumber = searchParams.get('bookingNumber') || 'FM-2026-00351';
 
@@ -171,3 +171,18 @@ END:VCALENDAR`;
     </div>
   );
 }
+
+export default function BookingSuccessPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-slate-50 pt-28 pb-20 text-center text-slate-400">
+          جاري التحميل...
+        </div>
+      }
+    >
+      <BookingSuccessContent />
+    </Suspense>
+  );
+}
+

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   },
 };
 
-export const BLOG_POSTS = [
+const BLOG_POSTS = [
   {
     slug: "when-to-replace-iphone-battery",
     title: "متى يجب عليك تغيير بطارية الآيفون؟ علامات وحلول نصائح الخبراء",
