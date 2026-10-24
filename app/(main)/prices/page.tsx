@@ -1,128 +1,161 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Search,
   ShieldCheck,
-  Clock,
   ArrowLeft,
-  Smartphone,
   MapPin,
-  CheckCircle,
   HelpCircle,
+  RefreshCw,
 } from 'lucide-react';
 import { InnerHero } from '@/src/shared/components/ui/InnerHero';
 import { useTranslation } from 'react-i18next';
 
+interface ServiceColumn {
+  id: string;
+  slug: string;
+  name_ar: string;
+  name_en?: string;
+  estimatedMinutes?: number;
+}
+
+interface PriceCell {
+  id?: string;
+  price: number;
+  discountPrice?: number | null;
+  warrantyDays?: number;
+  status: string;
+}
+
+interface PriceModel {
+  id: string;
+  name: string;
+  slug?: string;
+  cells: Record<string, PriceCell>;
+}
+
+interface PriceSeries {
+  series: string;
+  models: PriceModel[];
+}
+
+interface AreaItem {
+  name: string;
+  city: string;
+  fee: string;
+}
+
 export default function PricesPage() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState<'iphone' | 'ipad' | 'watch'>('iphone');
+  const [isLoading, setIsLoading] = useState(true);
 
-  const seriesData = [
-    {
-      series: 'iPhone 16 Series',
-      models: [
-        {
-          id: 'ip-16-pm',
-          name: 'iPhone 16 Pro Max',
-          screen: { price: 14500, warranty: 'ضمان 6 شهور', status: 'available' },
-          battery: { price: 3800, warranty: 'ضمان 6 شهور', status: 'available' },
-          back: { price: 3200, warranty: 'ضمان 6 شهور', status: 'available' },
-          camera: { price: 4200, warranty: 'ضمان 3 شهور', status: 'available' },
-        },
-        {
-          id: 'ip-16-p',
-          name: 'iPhone 16 Pro',
-          screen: { price: 13200, warranty: 'ضمان 6 شهور', status: 'available' },
-          battery: { price: 3600, warranty: 'ضمان 6 شهور', status: 'available' },
-          back: { price: 2900, warranty: 'ضمان 6 شهور', status: 'available' },
-          camera: { price: 3900, warranty: 'ضمان 3 شهور', status: 'available' },
-        },
-      ],
-    },
-    {
-      series: 'iPhone 15 Series',
-      models: [
-        {
-          id: 'ip-15-pm',
-          name: 'iPhone 15 Pro Max',
-          screen: { price: 9500, discountPrice: 8900, warranty: 'ضمان 6 شهور', status: 'available' },
-          battery: { price: 2800, warranty: 'ضمان 6 شهور', status: 'available' },
-          back: { price: 2400, warranty: 'ضمان 6 شهور', status: 'available' },
-          camera: { price: 3100, warranty: 'ضمان 3 شهور', status: 'available' },
-        },
-        {
-          id: 'ip-15-p',
-          name: 'iPhone 15 Pro',
-          screen: { price: 8800, warranty: 'ضمان 6 شهور', status: 'available' },
-          battery: { price: 2700, warranty: 'ضمان 6 شهور', status: 'available' },
-          back: { price: 2200, warranty: 'ضمان 6 شهور', status: 'available' },
-          camera: { price: 2900, warranty: 'ضمان 3 شهور', status: 'available' },
-        },
-        {
-          id: 'ip-15',
-          name: 'iPhone 15',
-          screen: { price: 6900, warranty: 'ضمان 6 شهور', status: 'available' },
-          battery: { price: 2400, warranty: 'ضمان 6 شهور', status: 'available' },
-          back: { price: 1900, warranty: 'ضمان 6 شهور', status: 'available' },
-          camera: { price: 2400, warranty: 'ضمان 3 شهور', status: 'available' },
-        },
-      ],
-    },
-    {
-      series: 'iPhone 14 Series',
-      models: [
-        {
-          id: 'ip-14-pm',
-          name: 'iPhone 14 Pro Max',
-          screen: { price: 7900, warranty: 'ضمان 6 شهور', status: 'available' },
-          battery: { price: 2400, warranty: 'ضمان 6 شهور', status: 'available' },
-          back: { price: 1900, warranty: 'ضمان 6 شهور', status: 'available' },
-          camera: { price: 2600, warranty: 'ضمان 3 شهور', status: 'available' },
-        },
-        {
-          id: 'ip-14',
-          name: 'iPhone 14',
-          screen: { price: 5400, warranty: 'ضمان 6 شهور', status: 'available' },
-          battery: { price: 2100, warranty: 'ضمان 6 شهور', status: 'available' },
-          back: { price: 1600, warranty: 'ضمان 6 شهور', status: 'available' },
-          camera: { price: 2100, warranty: 'ضمان 3 شهور', status: 'available' },
-        },
-      ],
-    },
-    {
-      series: 'iPhone 13 Series',
-      models: [
-        {
-          id: 'ip-13-pm',
-          name: 'iPhone 13 Pro Max',
-          screen: { price: 6800, warranty: 'ضمان 6 شهور', status: 'available' },
-          battery: { price: 2100, warranty: 'ضمان 6 شهور', status: 'available' },
-          back: { price: 1700, warranty: 'ضمان 6 شهور', status: 'available' },
-          camera: { price: 2300, warranty: 'ضمان 3 شهور', status: 'available' },
-        },
-        {
-          id: 'ip-13',
-          name: 'iPhone 13',
-          screen: { price: 4600, warranty: 'ضمان 6 شهور', status: 'available' },
-          battery: { price: 1900, warranty: 'ضمان 6 شهور', status: 'available' },
-          back: { price: 1400, warranty: 'ضمان 6 شهور', status: 'available' },
-          camera: { price: 1800, warranty: 'ضمان 3 شهور', status: 'available' },
-        },
-      ],
-    },
+  const apiBase =
+    process.env.NEXT_PUBLIC_API_URL || 'https://foucs.agro-plus.net/api/v1';
+
+  const defaultColumns: ServiceColumn[] = [
+    { id: 'screen', slug: 'screen', name_ar: 'تغيير شاشة أصلية', name_en: 'Screen' },
+    { id: 'battery', slug: 'battery', name_ar: 'تغيير بطارية أصلية', name_en: 'Battery' },
+    { id: 'back-glass', slug: 'back-glass', name_ar: 'تغيير ظهر ليزر', name_en: 'Back Glass' },
   ];
 
-  const areasFees = [
+  const [columns, setColumns] = useState<ServiceColumn[]>(defaultColumns);
+  const [seriesData, setSeriesData] = useState<PriceSeries[]>([]);
+  const [areasFees, setAreasFees] = useState<AreaItem[]>([
     { name: 'المعادي والبساتين', city: 'القاهرة', fee: 'مجاناً 0 ج.م' },
     { name: 'مدينة نصر ومصر الجديدة', city: 'القاهرة', fee: 'مجاناً 0 ج.م' },
     { name: 'التجمع الخامس والقاهرة الجديدة', city: 'القاهرة', fee: 'مجاناً 0 ج.م' },
     { name: 'الدقي والمهندسين والزمالك', city: 'الجيزة', fee: 'مجاناً 0 ج.م' },
     { name: 'الشيخ زايد و 6 أكتوبر', city: 'الجيزة', fee: 'مجاناً 0 ج.م' },
     { name: 'الشروق ومدينتي والرحاب', city: 'القاهرة', fee: 'مجاناً 0 ج.م' },
-  ];
+  ]);
+
+  // Load Areas from API
+  useEffect(() => {
+    fetch(`${apiBase}/areas`)
+      .then((r) => r.json())
+      .then((areas) => {
+        if (Array.isArray(areas) && areas.length > 0) {
+          setAreasFees(
+            areas.map((a: any) => ({
+              name: a.name_ar,
+              city: a.city_ar,
+              fee: Number(a.transport_fee) === 0 ? 'مجاناً 0 ج.م' : `${a.transport_fee} ج.م`,
+            }))
+          );
+        }
+      })
+      .catch(() => {});
+  }, [apiBase]);
+
+  // Load Pricing Matrix from API for selected Device Type
+  useEffect(() => {
+    let cancelled = false;
+    setIsLoading(true);
+
+    const typeSlug = activeTab === 'watch' ? 'apple-watch' : activeTab;
+
+    fetch(`${apiBase}/pricing?type=${typeSlug}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+
+        if (data?.columns && Array.isArray(data.columns) && data.columns.length > 0) {
+          setColumns(
+            data.columns.map((c: any) => ({
+              id: c.id,
+              slug: c.slug,
+              name_ar: c.name_ar,
+              name_en: c.name_en,
+              estimatedMinutes: c.estimatedMinutes,
+            }))
+          );
+        }
+
+        if (data?.series && Array.isArray(data.series) && data.series.length > 0) {
+          const mappedSeries: PriceSeries[] = data.series.map((sGroup: any) => ({
+            series: sGroup.title || 'سلسلة الأجهزة',
+            models: (sGroup.models || []).map((m: any) => {
+              const cellsMap: Record<string, PriceCell> = {};
+              if (m.cells) {
+                Object.entries(m.cells).forEach(([slug, val]: [string, any]) => {
+                  cellsMap[slug] = {
+                    id: val.id,
+                    price: Number(val.price || 0),
+                    discountPrice: val.discountPrice ? Number(val.discountPrice) : null,
+                    warrantyDays: val.warrantyDays || 180,
+                    status: val.status || 'available',
+                  };
+                });
+              }
+              return {
+                id: m.id,
+                name: m.name,
+                slug: m.slug,
+                cells: cellsMap,
+              };
+            }),
+          }));
+
+          setSeriesData(mappedSeries);
+        } else {
+          setSeriesData([]);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load live prices:', err);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [apiBase, activeTab]);
 
   // Filter models
   const cleanSearch = search.toLowerCase().replace(/\s+/g, '');
@@ -135,24 +168,26 @@ export default function PricesPage() {
         ),
       }))
       .filter((s) => s.models.length > 0);
-  }, [cleanSearch]);
+  }, [seriesData, cleanSearch]);
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
       <InnerHero
         breadcrumb={[
-          { label: t("nav.home"), href: "/" },
-          { label: t("pricesPage.title") },
+          { label: t('nav.home', 'الرئيسية'), href: '/' },
+          { label: t('pricesPage.title', 'أسعار الصيانة') },
         ]}
-        badge={t("pricesPage.badge")}
+        badge={t('pricesPage.badge', 'ضمان معتمد حتى سنة')}
         badgeIcon={<ShieldCheck className="w-4 h-4 text-emerald-600" />}
-        title={t("pricesPage.title")}
-        highlightedTitle={t("pricesPage.highlight")}
-        description={t("pricesPage.desc")}
+        title={t('pricesPage.title', 'قائمة أسعار صيانة أجهزة Apple')}
+        highlightedTitle={t('pricesPage.highlight', 'شفافة ومحددة مسبقاً')}
+        description={t(
+          'pricesPage.desc',
+          'أسعار قطع الغيار الأصلية المعتمدة مع خدمة الصيانة في منزلك وضمان مكتوب فور انتهاء الإصلاح.'
+        )}
       />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-20 space-y-10">
-
         {/* Search & Tabs Toolbar */}
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
           {/* Search Box */}
@@ -162,7 +197,7 @@ export default function PricesPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder={t("pricesPage.searchPlaceholder")}
+              placeholder={t('pricesPage.searchPlaceholder', 'ابحث عن موديل جهازك...')}
               className="w-full pl-4 pr-10 py-2.5 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
@@ -189,158 +224,152 @@ export default function PricesPage() {
           </div>
         </div>
 
-        {/* Pricing Tables Grouped by Series */}
-        <div className="space-y-8">
-          {filteredSeries.length > 0 ? (
-            filteredSeries.map((sGroup) => (
-              <div
-                key={sGroup.series}
-                className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"
-              >
-                {/* Series Banner */}
-                <div className="bg-slate-900 text-white px-6 py-3.5 flex items-center justify-between">
-                  <h2 className="font-bold text-sm tracking-wide">{sGroup.series}</h2>
-                  <span className="text-xs text-emerald-400 font-semibold">{t("pricesPage.seriesBadge")}</span>
-                </div>
+        {/* Loading State */}
+        {isLoading && seriesData.length === 0 ? (
+          <div className="bg-white rounded-2xl p-16 text-center border border-slate-200 shadow-sm">
+            <RefreshCw className="w-7 h-7 text-emerald-600 animate-spin mx-auto mb-3" />
+            <p className="text-sm font-bold text-slate-800">جاري تحميل الأسعار الحية المحدثة...</p>
+            <p className="text-xs text-slate-400 mt-1">يتم جلب قائمة الأسعار الرسمية والضمان من الخادم مباشرة</p>
+          </div>
+        ) : (
+          /* Pricing Tables Grouped by Series */
+          <div className="space-y-8">
+            {filteredSeries.length > 0 ? (
+              filteredSeries.map((sGroup) => (
+                <div
+                  key={sGroup.series}
+                  className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"
+                >
+                  {/* Series Banner */}
+                  <div className="bg-slate-900 text-white px-6 py-3.5 flex items-center justify-between">
+                    <h2 className="font-bold text-sm tracking-wide">{sGroup.series}</h2>
+                    <span className="text-xs text-emerald-400 font-semibold">
+                      {t('pricesPage.seriesBadge', 'أسعار حية وضمان معتمد')}
+                    </span>
+                  </div>
 
-                {/* Desktop Table View */}
-                <div className="hidden md:block overflow-x-auto">
-                  <table className="w-full text-right text-sm border-collapse">
-                    <thead className="bg-slate-50 text-slate-700 font-bold border-b border-slate-200 text-xs">
-                      <tr>
-                        <th className="py-3 px-5">{t("pricesPage.colModel")}</th>
-                        <th className="py-3 px-4 text-center">{t("pricesPage.colScreen")}</th>
-                        <th className="py-3 px-4 text-center">{t("pricesPage.colBattery")}</th>
-                        <th className="py-3 px-4 text-center">{t("pricesPage.colBack")}</th>
-                        <th className="py-3 px-4 text-center">{t("pricesPage.colCamera")}</th>
-                        <th className="py-3 px-5 text-center">{t("pricesPage.colAction")}</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {sGroup.models.map((m) => (
-                        <tr key={m.id} className="hover:bg-slate-50/80 transition-colors">
-                          <td className="py-4 px-5 font-bold text-slate-900">
-                            <div>{m.name}</div>
-                          </td>
-
-                          {/* Screen */}
-                          <td className="py-4 px-4 text-center">
-                            <div className="font-extrabold text-slate-900">
-                              {m.screen.discountPrice || m.screen.price} ج.م
-                            </div>
-                            <span className="text-[10px] text-emerald-700 font-semibold block mt-0.5">
-                              {m.screen.warranty}
-                            </span>
-                          </td>
-
-                          {/* Battery */}
-                          <td className="py-4 px-4 text-center">
-                            <div className="font-extrabold text-slate-900">{m.battery.price} ج.م</div>
-                            <span className="text-[10px] text-emerald-700 font-semibold block mt-0.5">
-                              {m.battery.warranty}
-                            </span>
-                          </td>
-
-                          {/* Back Glass */}
-                          <td className="py-4 px-4 text-center">
-                            <div className="font-extrabold text-slate-900">{m.back.price} ج.م</div>
-                            <span className="text-[10px] text-emerald-700 font-semibold block mt-0.5">
-                              {m.back.warranty}
-                            </span>
-                          </td>
-
-                          {/* Camera */}
-                          <td className="py-4 px-4 text-center">
-                            <div className="font-extrabold text-slate-900">{m.camera.price} ج.م</div>
-                            <span className="text-[10px] text-emerald-700 font-semibold block mt-0.5">
-                              {m.camera.warranty}
-                            </span>
-                          </td>
-
-                          {/* Direct Book CTA */}
-                          <td className="py-4 px-5 text-center">
-                            <Link
-                              href={`/book?model=${m.id}`}
-                              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm inline-flex items-center gap-1.5 transition-colors"
-                            >
-                              <span>{t("pricesPage.bookNow")}</span>
-                              <ArrowLeft className="w-3.5 h-3.5 rtl:rotate-0 ltr:rotate-180" />
-                            </Link>
-                          </td>
+                  {/* Desktop Table View */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full text-right text-sm border-collapse">
+                      <thead className="bg-slate-50 text-slate-700 font-bold border-b border-slate-200 text-xs">
+                        <tr>
+                          <th className="py-3 px-5">{t('pricesPage.colModel', 'الموديل')}</th>
+                          {columns.map((col) => (
+                            <th key={col.id} className="py-3 px-4 text-center">
+                              <div>{col.name_ar}</div>
+                              {col.estimatedMinutes && (
+                                <div className="text-[10px] text-slate-400 font-normal">
+                                  ~{col.estimatedMinutes} دقيقة
+                                </div>
+                              )}
+                            </th>
+                          ))}
+                          <th className="py-3 px-5 text-center">{t('pricesPage.colAction', 'حجز صيانة')}</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {sGroup.models.map((m) => (
+                          <tr key={m.id} className="hover:bg-slate-50/80 transition-colors">
+                            <td className="py-4 px-5 font-bold text-slate-900">
+                              <div>{m.name}</div>
+                            </td>
 
-                {/* Mobile Cards View */}
-                <div className="md:hidden divide-y divide-slate-100 p-4 space-y-4">
-                  {sGroup.models.map((m) => (
-                    <div key={m.id} className="pt-4 first:pt-0 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-slate-900 text-sm">{m.name}</span>
-                        <Link
-                          href={`/book?model=${m.id}`}
-                          className="px-3.5 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold"
-                        >
-                          احجز
-                        </Link>
+                            {columns.map((col) => {
+                              const cell = m.cells[col.slug];
+                              return (
+                                <td key={col.id} className="py-4 px-4 text-center">
+                                  {cell && cell.price > 0 ? (
+                                    <div>
+                                      <div className="font-extrabold text-slate-900">
+                                        {(cell.discountPrice || cell.price).toLocaleString()} ج.م
+                                      </div>
+                                      <span className="text-[10px] text-emerald-700 font-semibold block mt-0.5">
+                                        ضمان {cell.warrantyDays} يوم
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <span className="text-xs text-slate-300 font-medium">—</span>
+                                  )}
+                                </td>
+                              );
+                            })}
+
+                            {/* Direct Book CTA */}
+                            <td className="py-4 px-5 text-center">
+                              <Link
+                                href={`/book?model=${m.id}`}
+                                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm inline-flex items-center gap-1.5 transition-colors"
+                              >
+                                <span>{t('pricesPage.bookNow', 'احجز الآن')}</span>
+                                <ArrowLeft className="w-3.5 h-3.5 rtl:rotate-0 ltr:rotate-180" />
+                              </Link>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile Cards View */}
+                  <div className="md:hidden divide-y divide-slate-100 p-4 space-y-4">
+                    {sGroup.models.map((m) => (
+                      <div key={m.id} className="pt-4 first:pt-0 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-slate-900 text-sm">{m.name}</span>
+                          <Link
+                            href={`/book?model=${m.id}`}
+                            className="px-3.5 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold"
+                          >
+                            احجز
+                          </Link>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          {columns.map((col) => {
+                            const cell = m.cells[col.slug];
+                            if (!cell || !cell.price) return null;
+                            return (
+                              <div
+                                key={col.id}
+                                className="bg-slate-50 p-2.5 rounded-xl border border-slate-100"
+                              >
+                                <span className="text-slate-500 block text-[10px]">
+                                  {col.name_ar}:
+                                </span>
+                                <span className="font-bold text-slate-900">
+                                  {(cell.discountPrice || cell.price).toLocaleString()} ج.م
+                                </span>
+                                <span className="text-[9px] text-emerald-700 block font-semibold">
+                                  ضمان {cell.warrantyDays} يوم
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
-
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                          <span className="text-slate-500 block text-[10px]">شاشة أصلية:</span>
-                          <span className="font-bold text-slate-900">{m.screen.price} ج.م</span>
-                          <span className="text-[9px] text-emerald-700 block font-semibold">
-                            {m.screen.warranty}
-                          </span>
-                        </div>
-
-                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                          <span className="text-slate-500 block text-[10px]">بطارية أصلية:</span>
-                          <span className="font-bold text-slate-900">{m.battery.price} ج.م</span>
-                          <span className="text-[9px] text-emerald-700 block font-semibold">
-                            {m.battery.warranty}
-                          </span>
-                        </div>
-
-                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                          <span className="text-slate-500 block text-[10px]">ظهر ليزر:</span>
-                          <span className="font-bold text-slate-900">{m.back.price} ج.م</span>
-                          <span className="text-[9px] text-emerald-700 block font-semibold">
-                            {m.back.warranty}
-                          </span>
-                        </div>
-
-                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                          <span className="text-slate-500 block text-[10px]">صيانة كاميرا:</span>
-                          <span className="font-bold text-slate-900">{m.camera.price} ج.م</span>
-                          <span className="text-[9px] text-emerald-700 block font-semibold">
-                            {m.camera.warranty}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
+              ))
+            ) : (
+              <div className="bg-white rounded-2xl p-12 text-center border border-slate-200">
+                <HelpCircle className="w-10 h-10 text-slate-400 mx-auto mb-3" />
+                <h3 className="text-base font-bold text-slate-900">
+                  {search ? 'لم نجد نتائج مطابقة لبحثك' : 'لا توجد أسعار معلنة لهذا الجهاز حالياً'}
+                </h3>
+                <p className="text-xs text-slate-500 mt-1 mb-4">
+                  هل تبحث عن صيانة لموديل خاص؟ تواصل معنا وسنقدم لك تسعيراً ومعاينة فورية
+                </p>
+                <Link
+                  href="/book"
+                  className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-bold inline-block"
+                >
+                  طلب كشف وتحديد سعر
+                </Link>
               </div>
-            ))
-          ) : (
-            <div className="bg-white rounded-2xl p-12 text-center border border-slate-200">
-              <HelpCircle className="w-10 h-10 text-slate-400 mx-auto mb-3" />
-              <h3 className="text-base font-bold text-slate-900">لم نجد نتائج مطابقة لبحثك</h3>
-              <p className="text-xs text-slate-500 mt-1 mb-4">
-                هل تبحث عن موديل غير مدرج؟ تواصل معنا وسنقدم لك تسعيراً فورياً
-              </p>
-              <Link
-                href="/book"
-                className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-bold inline-block"
-              >
-                طلب سعر مخصص
-              </Link>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
 
         {/* Areas & Transport Fees Section */}
         <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
