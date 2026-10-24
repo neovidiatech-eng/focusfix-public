@@ -79,20 +79,44 @@ const ARTICLES: Record<string, Article> = {
   },
 };
 
+async function fetchLiveArticle(slug: string): Promise<Article | null> {
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+  try {
+    const res = await fetch(`${apiBase}/blog/posts/${slug}`, { next: { revalidate: 60 } });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.title_ar) {
+        return {
+          slug: data.slug,
+          title: data.title_ar,
+          category: data.category?.name_ar || 'مقالات عامة',
+          readTime: `${data.reading_minutes || 4} دقائق`,
+          publishedAt: data.published_at ? new Date(data.published_at).toLocaleDateString('ar-EG') : 'حديثاً',
+          coverImage: data.featured_image || '/image1.jpeg',
+          content: data.content_html ? [data.content_html] : [data.excerpt_ar || ''],
+        };
+      }
+    }
+  } catch (e) {
+    console.error('Failed to fetch live article:', e);
+  }
+  return ARTICLES[slug] || null;
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const article = ARTICLES[slug];
+  const article = (await fetchLiveArticle(slug)) || ARTICLES[slug];
   if (!article) return { title: "المقال غير موجود | FocusFix" };
 
   return {
     title: `${article.title} | مدونة FocusFix`,
-    description: article.content[0],
+    description: article.content[0]?.replace(/<[^>]*>/g, '') || '',
     alternates: {
       canonical: `https://focusfix.net/blog/${article.slug}`,
     },
     openGraph: {
       title: article.title,
-      description: article.content[0],
+      description: article.content[0]?.replace(/<[^>]*>/g, '') || '',
       images: [article.coverImage],
     },
   };
@@ -100,7 +124,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const article = ARTICLES[slug];
+  const article = await fetchLiveArticle(slug);
 
   if (!article) {
     notFound();

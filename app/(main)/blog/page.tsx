@@ -12,7 +12,17 @@ export const metadata: Metadata = {
   },
 };
 
-const BLOG_POSTS = [
+interface BlogPostItem {
+  slug: string;
+  title: string;
+  excerpt: string;
+  category: string;
+  readTime: string;
+  publishedAt: string;
+  coverImage: string;
+}
+
+const DEFAULT_BLOG_POSTS: BlogPostItem[] = [
   {
     slug: "when-to-replace-iphone-battery",
     title: "متى يجب عليك تغيير بطارية الآيفون؟ علامات وحلول نصائح الخبراء",
@@ -55,7 +65,33 @@ const BLOG_POSTS = [
   },
 ];
 
-export default function BlogIndexPage() {
+async function getLivePosts(): Promise<BlogPostItem[]> {
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+  try {
+    const res = await fetch(`${apiBase}/blog/posts?limit=30`, { next: { revalidate: 60 } });
+    if (res.ok) {
+      const json = await res.json();
+      if (Array.isArray(json.data) && json.data.length > 0) {
+        return json.data.map((p: any) => ({
+          slug: p.slug,
+          title: p.title_ar || p.title_en,
+          excerpt: p.excerpt_ar || p.excerpt_en || '',
+          category: p.category?.name_ar || 'مقالات عامة',
+          readTime: `${p.reading_minutes || 4} دقائق`,
+          publishedAt: p.published_at ? new Date(p.published_at).toISOString().slice(0, 10) : '',
+          coverImage: p.featured_image || '/image1.jpeg',
+        }));
+      }
+    }
+  } catch (e) {
+    console.error('Failed to load live blog posts:', e);
+  }
+  return DEFAULT_BLOG_POSTS;
+}
+
+export default async function BlogIndexPage() {
+  const blogPosts = await getLivePosts();
+
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
       <InnerHero
@@ -73,29 +109,29 @@ export default function BlogIndexPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-20">
 
         {/* Featured Post (First one) */}
-        {BLOG_POSTS.length > 0 && (
+        {blogPosts.length > 0 && (
           <Link
-            href={`/blog/${BLOG_POSTS[0].slug}`}
+            href={`/blog/${blogPosts[0].slug}`}
             className="group block bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-lg transition-all duration-300 mb-12"
           >
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
               <div className="lg:col-span-7 p-8 sm:p-10">
                 <div className="flex items-center gap-3 mb-4">
                   <span className="text-xs font-bold px-3 py-1 bg-brand-100/10 text-brand-700 rounded-full border border-brand-200">
-                    {BLOG_POSTS[0].category}
+                    {blogPosts[0].category}
                   </span>
                   <div className="flex items-center gap-1.5 text-xs text-slate-400">
                     <Clock className="w-3.5 h-3.5" />
-                    <span>{BLOG_POSTS[0].readTime}</span>
+                    <span>{blogPosts[0].readTime}</span>
                   </div>
                 </div>
 
                 <h2 className="text-2xl sm:text-3xl font-black text-slate-900 group-hover:text-brand-600 transition-colors mb-3 leading-snug">
-                  {BLOG_POSTS[0].title}
+                  {blogPosts[0].title}
                 </h2>
 
                 <p className="text-slate-600 text-sm sm:text-base leading-relaxed mb-6">
-                  {BLOG_POSTS[0].excerpt}
+                  {blogPosts[0].excerpt}
                 </p>
 
                 <div className="flex items-center gap-2 text-brand-600 font-bold text-sm">
@@ -106,8 +142,8 @@ export default function BlogIndexPage() {
 
               <div className="lg:col-span-5 h-64 lg:h-full relative bg-slate-100 overflow-hidden">
                 <img
-                  src={BLOG_POSTS[0].coverImage}
-                  alt={BLOG_POSTS[0].title}
+                  src={blogPosts[0].coverImage}
+                  alt={blogPosts[0].title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
               </div>
@@ -117,7 +153,7 @@ export default function BlogIndexPage() {
 
         {/* Rest of posts */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {BLOG_POSTS.slice(1).map((post) => (
+          {blogPosts.slice(1).map((post: BlogPostItem) => (
             <Link
               key={post.slug}
               href={`/blog/${post.slug}`}
