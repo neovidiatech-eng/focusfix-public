@@ -65,32 +65,45 @@ const DEFAULT_BLOG_POSTS: BlogPostItem[] = [
   },
 ];
 
-async function getLivePosts(): Promise<BlogPostItem[]> {
+interface LivePostsResult {
+  posts: BlogPostItem[];
+  fromApi: boolean;
+}
+
+async function getLivePosts(): Promise<LivePostsResult> {
   const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
   try {
-    const res = await fetch(`${apiBase}/blog/posts?limit=30`, { next: { revalidate: 60 } });
+    const res = await fetch(`${apiBase}/blog/posts?limit=30`, {
+      next: { revalidate: 30, tags: ['blog'] },
+    });
     if (res.ok) {
       const json = await res.json();
-      if (Array.isArray(json.data) && json.data.length > 0) {
-        return json.data.map((p: any) => ({
-          slug: p.slug,
-          title: p.title_ar || p.title_en,
-          excerpt: p.excerpt_ar || p.excerpt_en || '',
-          category: p.category?.name_ar || 'مقالات عامة',
-          readTime: `${p.reading_minutes || 4} دقائق`,
-          publishedAt: p.published_at ? new Date(p.published_at).toISOString().slice(0, 10) : '',
-          coverImage: p.featured_image || '/image1.jpeg',
-        }));
+      if (Array.isArray(json.data)) {
+        return {
+          fromApi: true,
+          posts: json.data.map((p: Record<string, unknown>) => ({
+            slug: p.slug as string,
+            title: (p.title_ar || p.title_en) as string,
+            excerpt: (p.excerpt_ar || p.excerpt_en || '') as string,
+            category: ((p.category as Record<string, string>)?.name_ar) || 'مقالات عامة',
+            readTime: `${(p.reading_minutes as number) || 4} دقائق`,
+            publishedAt: p.published_at
+              ? new Date(p.published_at as string).toISOString().slice(0, 10)
+              : '',
+            coverImage: (p.featured_image as string) || '/image1.jpeg',
+          })),
+        };
       }
     }
   } catch (e) {
     console.error('Failed to load live blog posts:', e);
   }
-  return DEFAULT_BLOG_POSTS;
+  // Only use DEFAULT_BLOG_POSTS when the API is completely unreachable
+  return { fromApi: false, posts: DEFAULT_BLOG_POSTS };
 }
 
 export default async function BlogIndexPage() {
-  const blogPosts = await getLivePosts();
+  const { posts: blogPosts } = await getLivePosts();
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
@@ -107,6 +120,17 @@ export default async function BlogIndexPage() {
       />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-20">
+
+        {/* Empty State */}
+        {blogPosts.length === 0 && (
+          <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center my-8 shadow-xs">
+            <BookOpen className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-slate-800 mb-2">لا توجد مقالات منشورة حالياً</h3>
+            <p className="text-sm text-slate-500 max-w-md mx-auto">
+              نقوم حالياً بإعداد مقالات ودلائل تقنية جديدة ومفيدة لأجهزة أبل. تابعنا قريباً!
+            </p>
+          </div>
+        )}
 
         {/* Featured Post (First one) */}
         {blogPosts.length > 0 && (

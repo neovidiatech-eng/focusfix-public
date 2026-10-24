@@ -3,10 +3,16 @@ import { revalidatePath, revalidateTag } from "next/cache";
 
 export async function POST(req: NextRequest) {
   try {
+    // Accept the secret via x-revalidate-secret header (sent by backend)
+    // OR via Authorization: Bearer header (legacy support)
+    const secret = process.env.REVALIDATION_SECRET || "focusfix_revalidate_secret";
+    const xSecret = req.headers.get("x-revalidate-secret");
     const authHeader = req.headers.get("authorization");
-    const secret = process.env.REVALIDATION_SECRET || "focusfix-secret-token-change-in-prod";
 
-    if (!authHeader || authHeader !== `Bearer ${secret}`) {
+    const isAuthorized =
+      xSecret === secret || authHeader === `Bearer ${secret}`;
+
+    if (!isAuthorized) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
