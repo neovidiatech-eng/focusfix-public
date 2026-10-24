@@ -105,7 +105,37 @@ const AREAS_DATA = [
   },
 ];
 
-export default function AreasIndexPage() {
+async function getAreas() {
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://foucs.agro-plus.net/api/v1';
+  try {
+    const res = await fetch(`${apiBase}/areas`, {
+      next: { revalidate: 60, tags: ['areas'] },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        return data.map((a: any) => ({
+          nameAr: a.name_ar,
+          nameEn: a.name_en || a.name_ar,
+          slug: a.slug,
+          governorate: a.city_ar || 'القاهرة',
+          travelFee: Number(a.transport_fee || 0),
+          eta: '30 - 45 دقيقة',
+          neighborhoods: [a.name_ar],
+          isPopular: Number(a.transport_fee || 0) === 0,
+        }));
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to fetch live areas on server:', err);
+  }
+  return null;
+}
+
+export default async function AreasIndexPage() {
+  const liveAreas = await getAreas();
+  const displayAreas = liveAreas || AREAS_DATA;
+
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
       <InnerHero
@@ -138,7 +168,7 @@ export default function AreasIndexPage() {
       {/* Grid of Areas */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {AREAS_DATA.map((area) => (
+          {displayAreas.map((area) => (
             <Link
               key={area.slug}
               href={`/areas/${area.slug}`}

@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState, useMemo, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Smartphone,
   Wrench,
@@ -21,8 +21,10 @@ import {
 } from 'lucide-react';
 import { InnerHero } from '@/src/shared/components/ui/InnerHero';
 
-export default function BookPage() {
+function BookContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlModelId = searchParams.get('model');
 
   // Current Step: 1, 2, 3, 4
   const [step, setStep] = useState<number>(1);
@@ -38,6 +40,7 @@ export default function BookPage() {
 
   // Step 3: Area & Slot
   const [selectedArea, setSelectedArea] = useState<any | null>(null);
+  const [areaSearch, setAreaSearch] = useState('');
   const [address, setAddress] = useState('');
   const [propertyType, setPropertyType] = useState<'home' | 'office'>('home');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
@@ -54,7 +57,7 @@ export default function BookPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
-  const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://foucs.agro-plus.net/api/v1';
 
   // Available Data
   const [models, setModels] = useState<any[]>([
@@ -217,6 +220,16 @@ export default function BookPage() {
     };
   }, [apiBase, selectedDeviceType]);
 
+  // Auto-select model from URL if provided (e.g. from /prices page CTA)
+  useEffect(() => {
+    if (!urlModelId || models.length === 0) return;
+    const found = models.find((m) => m.id === urlModelId || m.slug === urlModelId);
+    if (found) {
+      setSelectedModel(found);
+      setStep(2);
+    }
+  }, [urlModelId, models]);
+
   useEffect(() => {
     if (!selectedModel?.cells) return;
     setServicesList((current) => current.map((service) => {
@@ -229,6 +242,16 @@ export default function BookPage() {
       } : service;
     }));
   }, [selectedModel]);
+
+  const filteredAreas = useMemo(() => {
+    if (!areaSearch.trim()) return areasList;
+    const q = areaSearch.toLowerCase().trim();
+    return areasList.filter(
+      (a) =>
+        (a.name && a.name.toLowerCase().includes(q)) ||
+        (a.city && a.city.toLowerCase().includes(q))
+    );
+  }, [areasList, areaSearch]);
 
   const availableDays = useMemo(() => {
     const formatter = new Intl.DateTimeFormat('ar-EG', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -602,11 +625,26 @@ export default function BookPage() {
                   </p>
                 </div>
 
-                {/* Area Dropdown */}
+                {/* Area Dropdown with Quick Search */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                    اختر منطقتك (القاهرة والجيزة)
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-bold text-slate-700">
+                      اختر منطقتك (القاهرة والجيزة)
+                    </label>
+                    <span className="text-[11px] text-slate-400">
+                      {areasList.length} مناطق تغطية متاحة
+                    </span>
+                  </div>
+                  <div className="relative mb-2">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={areaSearch}
+                      onChange={(e) => setAreaSearch(e.target.value)}
+                      placeholder="ابحث عن منطقتك (مثال: المعادي، التجمع، الشيخ زايد)..."
+                      className="w-full pl-3 pr-9 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
                   <select
                     value={selectedArea?.id || ''}
                     onChange={(e) => {
@@ -615,7 +653,7 @@ export default function BookPage() {
                     }}
                     className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   >
-                    {areasList.map((a) => (
+                    {filteredAreas.map((a) => (
                       <option key={a.id} value={a.id}>
                         {a.name} ({a.city}) — انتقال: {a.fee === 0 ? 'مجاناً' : `+${a.fee} ج.م`}
                       </option>
@@ -896,5 +934,20 @@ export default function BookPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function BookPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-slate-500">
+          <Clock className="w-8 h-8 text-emerald-600 animate-spin mb-3" />
+          <p className="text-sm font-bold">جاري تحميل نظام الحجز الفوري...</p>
+        </div>
+      }
+    >
+      <BookContent />
+    </Suspense>
   );
 }
