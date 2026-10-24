@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { MapPin, ArrowRight, ShieldCheck, Clock, CheckCircle2, Phone } from "lucide-react";
+import { MapPin, ArrowRight, ShieldCheck, Clock, CheckCircle2, Phone, HelpCircle } from "lucide-react";
 import { InnerHero } from "@/src/shared/components/ui/InnerHero";
 
 export const metadata: Metadata = {
@@ -11,99 +11,6 @@ export const metadata: Metadata = {
     canonical: "https://focusfix.net/areas",
   },
 };
-
-const AREAS_DATA = [
-  {
-    nameAr: "التجمع الخامس والقاهرة الجديدة",
-    nameEn: "New Cairo & 5th Settlement",
-    slug: "new-cairo",
-    governorate: "القاهرة",
-    travelFee: 0,
-    eta: "30 - 45 دقيقة",
-    neighborhoods: ["شارع التسعين", "حي النرجس", "حي الياسمين", "حي البنفسج", "مدينتي", "الرحاب"],
-    isPopular: true,
-  },
-  {
-    nameAr: "مدينة نصر",
-    nameEn: "Nasr City",
-    slug: "nasr-city",
-    governorate: "القاهرة",
-    travelFee: 0,
-    eta: "30 - 45 دقيقة",
-    neighborhoods: ["عباس العقاد", "مكرم عبيد", "سيتي ستارز", "الحي السابع", "الحي العاشر"],
-    isPopular: true,
-  },
-  {
-    nameAr: "مصر الجديدة",
-    nameEn: "Heliopolis",
-    slug: "heliopolis",
-    governorate: "القاهرة",
-    travelFee: 0,
-    eta: "30 - 45 دقيقة",
-    neighborhoods: ["الكوربة", "روكسي", "ميدان الحجاز", "تريومف", "النزهة الجديدة"],
-    isPopular: true,
-  },
-  {
-    nameAr: "المعادي",
-    nameEn: "Maadi",
-    slug: "maadi",
-    governorate: "القاهرة",
-    travelFee: 0,
-    eta: "30 - 45 دقيقة",
-    neighborhoods: ["المعادي القديمة", "دجلة المعادي", "اللاسلكي", "زهراء المعادي"],
-    isPopular: true,
-  },
-  {
-    nameAr: "الشيخ زايد",
-    nameEn: "Sheikh Zayed",
-    slug: "sheikh-zayed",
-    governorate: "الجيزة",
-    travelFee: 0,
-    eta: "45 - 60 دقيقة",
-    neighborhoods: ["بيفرلي هيلز", "الزايد ديونز", "الحي الثامن", "أركان بلازا"],
-    isPopular: true,
-  },
-  {
-    nameAr: "6 أكتوبر",
-    nameEn: "6th of October",
-    slug: "6th-of-october",
-    governorate: "الجيزة",
-    travelFee: 0,
-    eta: "45 - 60 دقيقة",
-    neighborhoods: ["الحصري", "غرب سوميد", "الأحياء", "مول العرب", "حدائق الأهرام"],
-    isPopular: true,
-  },
-  {
-    nameAr: "الدقي والمهندسين",
-    nameEn: "Dokki & Mohandessin",
-    slug: "dokki-mohandessin",
-    governorate: "الجيزة",
-    travelFee: 0,
-    eta: "30 - 40 دقيقة",
-    neighborhoods: ["شارع مصدق", "ميدان المساحة", "شارع جامعة الدول", "ميدان لبنان"],
-    isPopular: true,
-  },
-  {
-    nameAr: "الزمالك وسط البلد",
-    nameEn: "Zamalek & Downtown",
-    slug: "zamalek",
-    governorate: "القاهرة",
-    travelFee: 0,
-    eta: "30 - 45 دقيقة",
-    neighborhoods: ["ش 26 يوليو", "ميدان التحرير", "جاردن سيتي", "أبو الفدا"],
-    isPopular: false,
-  },
-  {
-    nameAr: "الشروق وبدر والمستقبل",
-    nameEn: "Shorouk & Badr",
-    slug: "shorouk",
-    governorate: "القاهرة",
-    travelFee: 0,
-    eta: "45 - 60 دقيقة",
-    neighborhoods: ["مدينة الشروق", "مدينتي", "مدينة بدر", "المستقبل سيتي"],
-    isPopular: false,
-  },
-];
 
 async function getAreas() {
   const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://foucs.agro-plus.net/api/v1';
@@ -129,12 +36,11 @@ async function getAreas() {
   } catch (err) {
     console.warn('Failed to fetch live areas on server:', err);
   }
-  return null;
+  return [];
 }
 
 export default async function AreasIndexPage() {
-  const liveAreas = await getAreas();
-  const displayAreas = liveAreas || AREAS_DATA;
+  const displayAreas = await getAreas();
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
@@ -167,48 +73,64 @@ export default async function AreasIndexPage() {
 
       {/* Grid of Areas */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {displayAreas.map((area) => (
+        {displayAreas.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {displayAreas.map((area) => (
+              <Link
+                key={area.slug}
+                href={`/areas/${area.slug}`}
+                className="group block bg-white rounded-2xl border border-slate-200 p-6 shadow-xs hover:shadow-md hover:border-brand-300 transition-all duration-200"
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-brand-50 border border-brand-100 flex items-center justify-center text-brand-600 group-hover:bg-brand-600 group-hover:text-white transition-colors">
+                    <MapPin className="w-5 h-5" />
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      {area.travelFee === 0 ? 'انتقال مجاني' : `+${area.travelFee} ج.م`}
+                    </span>
+                    <span className="text-[11px] text-slate-400 mt-1">{area.governorate}</span>
+                  </div>
+                </div>
+
+                <h2 className="text-xl font-bold text-slate-900 group-hover:text-brand-600 transition-colors mb-1">
+                  {area.nameAr}
+                </h2>
+                <p className="text-xs text-slate-500 mb-4">{area.nameEn}</p>
+
+                <div className="text-xs text-slate-600 space-y-1.5 mb-5 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400">متوسط الوصول:</span>
+                    <span className="font-semibold text-slate-700">{area.eta}</span>
+                  </div>
+                  <div className="text-slate-500 line-clamp-1">
+                    <span className="text-slate-400">المنطقة: </span>
+                    {area.neighborhoods.join(" · ")}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-brand-600 font-bold text-sm pt-2 border-t border-slate-100 group-hover:translate-x-[-2px] transition-transform">
+                  <span>عرض خدمات وصيانة المنطقة</span>
+                  <ArrowRight className="w-4 h-4 rtl:rotate-180" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl p-12 text-center border border-slate-200">
+            <HelpCircle className="w-10 h-10 text-slate-400 mx-auto mb-3" />
+            <h3 className="text-base font-bold text-slate-900">يتم تحديث قائمة مناطق التغطية حالياً</h3>
+            <p className="text-xs text-slate-500 mt-1 mb-4">
+              نغطي جميع مناطق القاهرة الكبرى والجيزة، يمكنك حجز موعد وسيتواصل معك الفني مباشرة
+            </p>
             <Link
-              key={area.slug}
-              href={`/areas/${area.slug}`}
-              className="group block bg-white rounded-2xl border border-slate-200 p-6 shadow-xs hover:shadow-md hover:border-brand-300 transition-all duration-200"
+              href="/book"
+              className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-bold inline-block"
             >
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-10 h-10 rounded-xl bg-brand-50 border border-brand-100 flex items-center justify-center text-brand-600 group-hover:bg-brand-600 group-hover:text-white transition-colors">
-                  <MapPin className="w-5 h-5" />
-                </div>
-                <div className="flex flex-col items-end">
-                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    انتقال مجاني
-                  </span>
-                  <span className="text-[11px] text-slate-400 mt-1">{area.governorate}</span>
-                </div>
-              </div>
-
-              <h2 className="text-xl font-bold text-slate-900 group-hover:text-brand-600 transition-colors mb-1">
-                {area.nameAr}
-              </h2>
-              <p className="text-xs text-slate-500 mb-4">{area.nameEn}</p>
-
-              <div className="text-xs text-slate-600 space-y-1.5 mb-5 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-400">متوسط الوصول:</span>
-                  <span className="font-semibold text-slate-700">{area.eta}</span>
-                </div>
-                <div className="text-slate-500 line-clamp-1">
-                  <span className="text-slate-400">تشمل: </span>
-                  {area.neighborhoods.join(" · ")}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between text-brand-600 font-bold text-sm pt-2 border-t border-slate-100 group-hover:translate-x-[-2px] transition-transform">
-                <span>عرض خدمات وصيانة المنطقة</span>
-                <ArrowRight className="w-4 h-4 rtl:rotate-180" />
-              </div>
+              احجز موعد في منطقتك
             </Link>
-          ))}
-        </div>
+          </div>
+        )}
 
         {/* CTA Banner */}
         <div className="mt-16 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-8 sm:p-12 text-white relative overflow-hidden shadow-xl border border-slate-700">

@@ -59,73 +59,10 @@ function BookContent() {
   const [dataLoading, setDataLoading] = useState(true);
   const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://foucs.agro-plus.net/api/v1';
 
-  // Available Data
-  const [models, setModels] = useState<any[]>([
-    { id: 'ip-16-pm', type: 'iphone', series: 'iPhone 16 Series', name: 'iPhone 16 Pro Max' },
-    { id: 'ip-16-p', type: 'iphone', series: 'iPhone 16 Series', name: 'iPhone 16 Pro' },
-    { id: 'ip-16', type: 'iphone', series: 'iPhone 16 Series', name: 'iPhone 16' },
-    { id: 'ip-15-pm', type: 'iphone', series: 'iPhone 15 Series', name: 'iPhone 15 Pro Max' },
-    { id: 'ip-15-p', type: 'iphone', series: 'iPhone 15 Series', name: 'iPhone 15 Pro' },
-    { id: 'ip-15', type: 'iphone', series: 'iPhone 15 Series', name: 'iPhone 15' },
-    { id: 'ip-14-pm', type: 'iphone', series: 'iPhone 14 Series', name: 'iPhone 14 Pro Max' },
-    { id: 'ip-14-p', type: 'iphone', series: 'iPhone 14 Series', name: 'iPhone 14 Pro' },
-    { id: 'ip-13', type: 'iphone', series: 'iPhone 13 Series', name: 'iPhone 13' },
-  ]);
-
-  const [servicesList, setServicesList] = useState<any[]>([
-    {
-      id: 'screen',
-      title: 'تغيير شاشة أصلية',
-      desc: 'شاشة أصلية مع استعادة True Tone وحساس الإضاءة',
-      price: 9500,
-      discountPrice: 8900,
-      warranty: 'ضمان 6 شهور',
-      duration: '30 دقيقة',
-    },
-    {
-      id: 'battery',
-      title: 'تغيير بطارية أصلية',
-      desc: 'بطارية أصلية بنسبة كفاءة 100% وأداء مستقر',
-      price: 2800,
-      warranty: 'ضمان 6 شهور',
-      duration: '25 دقيقة',
-    },
-    {
-      id: 'back',
-      title: 'تغيير ظهر ليزر',
-      desc: 'فك واستبدال الزجاج الخلفي بأحدث ماكينة ليزر',
-      price: 2200,
-      warranty: 'ضمان 6 شهور',
-      duration: '45 دقيقة',
-    },
-    {
-      id: 'camera',
-      title: 'صيانة الكاميرا والعدسات',
-      desc: 'تصليح اهتزاز الفوكس وتغيير الزجاج المكسور',
-      price: 3100,
-      warranty: 'ضمان 3 شهور',
-      duration: '30 دقيقة',
-    },
-    {
-      id: 'other',
-      title: 'عطل آخر / فحص شامل',
-      desc: 'إذا لم تكن متأكداً من العطل، سيقوم الفني بالفحص',
-      price: 0,
-      warranty: 'ضمان حسب العطل',
-      duration: '30 دقيقة',
-    },
-  ]);
-
-  const [areasList, setAreasList] = useState<any[]>([
-    { id: 'maadi', name: 'المعادي', city: 'القاهرة', fee: 0 },
-    { id: 'nasr-city', name: 'مدينة نصر', city: 'القاهرة', fee: 0 },
-    { id: 'heliopolis', name: 'مصر الجديدة', city: 'القاهرة', fee: 0 },
-    { id: 'new-cairo', name: 'التجمع الخامس والقاهرة الجديدة', city: 'القاهرة', fee: 0 },
-    { id: 'dokki', name: 'الدقي والمهندسين والعجوزة', city: 'الجيزة', fee: 0 },
-    { id: 'sheikh-zayed', name: 'الشيخ زايد', city: 'الجيزة', fee: 0 },
-    { id: '6-october', name: '6 أكتوبر والواحات', city: 'الجيزة', fee: 0 },
-    { id: 'shorouk', name: 'الشروق ومدينتي', city: 'القاهرة', fee: 0 },
-  ]);
+  // Live Data directly from DB
+  const [models, setModels] = useState<any[]>([]);
+  const [servicesList, setServicesList] = useState<any[]>([]);
+  const [areasList, setAreasList] = useState<any[]>([]);
 
   // 1. Initial Load of Areas
   useEffect(() => {

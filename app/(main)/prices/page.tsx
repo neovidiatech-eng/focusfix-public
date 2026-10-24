@@ -56,22 +56,9 @@ export default function PricesPage() {
   const apiBase =
     process.env.NEXT_PUBLIC_API_URL || 'https://foucs.agro-plus.net/api/v1';
 
-  const defaultColumns: ServiceColumn[] = [
-    { id: 'screen', slug: 'screen', name_ar: 'تغيير شاشة أصلية', name_en: 'Screen' },
-    { id: 'battery', slug: 'battery', name_ar: 'تغيير بطارية أصلية', name_en: 'Battery' },
-    { id: 'back-glass', slug: 'back-glass', name_ar: 'تغيير ظهر ليزر', name_en: 'Back Glass' },
-  ];
-
-  const [columns, setColumns] = useState<ServiceColumn[]>(defaultColumns);
+  const [columns, setColumns] = useState<ServiceColumn[]>([]);
   const [seriesData, setSeriesData] = useState<PriceSeries[]>([]);
-  const [areasFees, setAreasFees] = useState<AreaItem[]>([
-    { name: 'المعادي والبساتين', city: 'القاهرة', fee: 'مجاناً 0 ج.م' },
-    { name: 'مدينة نصر ومصر الجديدة', city: 'القاهرة', fee: 'مجاناً 0 ج.م' },
-    { name: 'التجمع الخامس والقاهرة الجديدة', city: 'القاهرة', fee: 'مجاناً 0 ج.م' },
-    { name: 'الدقي والمهندسين والزمالك', city: 'الجيزة', fee: 'مجاناً 0 ج.م' },
-    { name: 'الشيخ زايد و 6 أكتوبر', city: 'الجيزة', fee: 'مجاناً 0 ج.م' },
-    { name: 'الشروق ومدينتي والرحاب', city: 'القاهرة', fee: 'مجاناً 0 ج.م' },
-  ]);
+  const [areasFees, setAreasFees] = useState<AreaItem[]>([]);
 
   // Load Areas from API
   useEffect(() => {
