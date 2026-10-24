@@ -124,36 +124,98 @@ export default function BookPage() {
     { id: 'shorouk', name: 'الشروق ومدينتي', city: 'القاهرة', fee: 0 },
   ]);
 
+  // 1. Initial Load of Areas
   useEffect(() => {
     let cancelled = false;
-    Promise.all([
-      fetch(`${apiBase}/pricing?type=iphone`).then((r) => r.json()),
-      fetch(`${apiBase}/areas`).then((r) => r.json()),
-    ]).then(([pricing, remoteAreas]) => {
-      if (cancelled || !pricing?.series || !Array.isArray(remoteAreas)) return;
-      const remoteModels = pricing.series.flatMap((series: any) => series.models.map((model: any) => ({
-        id: model.id, name: model.name, series: series.title, cells: model.cells,
-      })));
-      const remoteServices = pricing.columns.map((service: any) => ({
-        id: service.id, slug: service.slug, title: service.name_ar, desc: service.name_ar,
-        price: 0, discountPrice: 0, warranty: 'حسب الخدمة', duration: `${service.estimatedMinutes} دقيقة`,
-      }));
-      const mappedAreas = remoteAreas.map((area: any) => ({
-        id: area.id, name: area.name_ar, city: area.city_ar, fee: Number(area.transport_fee || 0), slug: area.slug,
-      }));
-      setModels(remoteModels);
-      setServicesList(remoteServices);
-      setAreasList(mappedAreas);
-      setSelectedModel(remoteModels[0] || null);
-      setSelectedServices(remoteServices[0] ? [remoteServices[0].id] : []);
-      setSelectedArea(mappedAreas[0] || null);
-    }).catch(() => {
-      if (!cancelled) setFormError('تعذر تحميل بيانات الحجز من الخادم.');
-    }).finally(() => {
-      if (!cancelled) setDataLoading(false);
-    });
-    return () => { cancelled = true; };
+    fetch(`${apiBase}/areas`)
+      .then((r) => r.json())
+      .then((remoteAreas) => {
+        if (cancelled || !Array.isArray(remoteAreas)) return;
+        const mappedAreas = remoteAreas.map((area: any) => ({
+          id: area.id,
+          name: area.name_ar,
+          city: area.city_ar,
+          fee: Number(area.transport_fee || 0),
+          slug: area.slug,
+        }));
+        setAreasList(mappedAreas);
+        setSelectedArea(mappedAreas[0] || null);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setDataLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [apiBase]);
+
+  // 2. Dynamic Models & Services Load based on selectedDeviceType
+  useEffect(() => {
+    let cancelled = false;
+    const typeSlug = selectedDeviceType === 'watch' ? 'apple-watch' : selectedDeviceType;
+
+    fetch(`${apiBase}/pricing?type=${typeSlug}`)
+      .then((r) => r.json())
+      .then(async (pricing) => {
+        if (cancelled) return;
+
+        if (pricing?.series && Array.isArray(pricing.series) && pricing.series.length > 0) {
+          const remoteModels = pricing.series.flatMap((series: any) =>
+            series.models.map((model: any) => ({
+              id: model.id,
+              name: model.name,
+              series: series.title,
+              cells: model.cells,
+            }))
+          );
+          setModels(remoteModels);
+          setSelectedModel(remoteModels[0] || null);
+
+          if (pricing.columns && Array.isArray(pricing.columns) && pricing.columns.length > 0) {
+            const remoteServices = pricing.columns.map((service: any) => ({
+              id: service.id,
+              slug: service.slug,
+              title: service.name_ar,
+              desc: service.name_ar,
+              price: 0,
+              discountPrice: 0,
+              warranty: 'حسب الخدمة',
+              duration: `${service.estimatedMinutes || 25} دقيقة`,
+            }));
+            setServicesList(remoteServices);
+            setSelectedServices(remoteServices[0] ? [remoteServices[0].id] : []);
+          }
+        } else {
+          // If pricing matrix not populated, fetch models directly from catalog
+          const catalogModels = await fetch(`${apiBase}/catalog/models?type=${typeSlug}`)
+            .then((r) => r.json())
+            .catch(() => []);
+
+          if (cancelled) return;
+          if (Array.isArray(catalogModels) && catalogModels.length > 0) {
+            const mapped = catalogModels.map((m: any) => ({
+              id: m.id,
+              name: m.name,
+              series: m.series_ar || m.series_en || 'الأجهزة',
+              cells: {},
+            }));
+            setModels(mapped);
+            setSelectedModel(mapped[0] || null);
+          } else {
+            setModels([]);
+            setSelectedModel(null);
+          }
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load models for type:', typeSlug, err);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [apiBase, selectedDeviceType]);
 
   useEffect(() => {
     if (!selectedModel?.cells) return;
@@ -393,32 +455,40 @@ export default function BookPage() {
 
                 {/* Model Grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {models
-                    .filter((m) =>
-                      m.name.toLowerCase().includes(modelSearch.toLowerCase().trim())
-                    )
-                    .map((m) => {
-                      const isSelected = selectedModel?.id === m.id;
-                      return (
-                        <div
-                          key={m.id}
-                          onClick={() => setSelectedModel(m)}
-                          className={`p-3.5 rounded-xl border text-center cursor-pointer transition-all ${
-                            isSelected
-                              ? 'border-emerald-600 bg-emerald-50/50 ring-2 ring-emerald-600/20'
-                              : 'border-slate-200 hover:border-slate-300 bg-white'
-                          }`}
-                        >
-                          <Smartphone
-                            className={`w-6 h-6 mx-auto mb-2 ${
-                              isSelected ? 'text-emerald-600' : 'text-slate-400'
+                  {models.filter((m) =>
+                    m.name.toLowerCase().includes(modelSearch.toLowerCase().trim())
+                  ).length === 0 ? (
+                    <div className="col-span-2 sm:col-span-3 py-10 text-center text-slate-400 text-xs bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                      لا توجد أجهزة متطابقة حالياً في هذا القسم.
+                    </div>
+                  ) : (
+                    models
+                      .filter((m) =>
+                        m.name.toLowerCase().includes(modelSearch.toLowerCase().trim())
+                      )
+                      .map((m) => {
+                        const isSelected = selectedModel?.id === m.id;
+                        return (
+                          <div
+                            key={m.id}
+                            onClick={() => setSelectedModel(m)}
+                            className={`p-3.5 rounded-xl border text-center cursor-pointer transition-all ${
+                              isSelected
+                                ? 'border-emerald-600 bg-emerald-50/50 ring-2 ring-emerald-600/20'
+                                : 'border-slate-200 hover:border-slate-300 bg-white'
                             }`}
-                          />
-                          <div className="font-bold text-xs text-slate-900">{m.name}</div>
-                          <div className="text-[10px] text-slate-400 mt-0.5">{m.series}</div>
-                        </div>
-                      );
-                    })}
+                          >
+                            <Smartphone
+                              className={`w-6 h-6 mx-auto mb-2 ${
+                                isSelected ? 'text-emerald-600' : 'text-slate-400'
+                              }`}
+                            />
+                            <div className="font-bold text-xs text-slate-900">{m.name}</div>
+                            <div className="text-[10px] text-slate-400 mt-0.5">{m.series}</div>
+                          </div>
+                        );
+                      })
+                  )}
                 </div>
 
                 <div className="pt-4 border-t border-slate-100 flex justify-end">
