@@ -21,49 +21,14 @@ export default function TrackBookingPage() {
     setBooking(null);
 
     try {
-      // In production connects to api.focusfix.net/api/v1/bookings/track
-      // Client-safe fallback for test / simulated tracking
       const cleanCode = bookingCode.trim().toUpperCase();
-      
-      // Attempt backend lookup if available
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
-      try {
-        const res = await fetch(`${API_URL}/bookings/track?code=${encodeURIComponent(cleanCode)}&phone=${encodeURIComponent(phone.trim())}`);
-        if (res.ok) {
-          const data = await res.json();
-          setBooking(data);
-          setLoading(false);
-          return;
-        }
-      } catch (e) {
-        // Fallback demo state if backend not reached yet
-      }
-
-      // Demo/Fallback lookup display
-      setTimeout(() => {
-        if (cleanCode.startsWith("FM-") || cleanCode.length > 5) {
-          setBooking({
-            bookingNumber: cleanCode,
-            status: "confirmed",
-            customerName: "عميل FocusFix",
-            device: "iPhone 15 Pro",
-            area: "التجمع الخامس",
-            slotDate: "2026-10-05",
-            slotLabel: "10:00 ص - 01:00 م",
-            services: [
-              { name: "تغيير شاشة أصلية", price: 6500, warrantyDays: 360 },
-            ],
-            transportFee: 0,
-            estimatedTotal: 6500,
-            statusText: "تم تأكيد الموعد - جاري تجهيز الفني المتخصص",
-          });
-        } else {
-          setError("لم يتم العثور على حجز بهذا الرقم. يرجى التأكد من كتابة كود الحجز مثل: FM-2026-00101");
-        }
-        setLoading(false);
-      }, 600);
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
+      const res = await fetch(`${API_URL}/bookings/track?code=${encodeURIComponent(cleanCode)}&phone=${encodeURIComponent(phone.trim())}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "لم يتم العثور على الحجز");
+      setBooking(data);
     } catch (err: any) {
-      setError("حدث خطأ أثناء الاستعلام. يرجى المحاولة مرة أخرى.");
+      setError(err?.message || "حدث خطأ أثناء الاستعلام. يرجى المحاولة مرة أخرى.");
       setLoading(false);
     }
   };

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Smartphone,
@@ -30,26 +30,17 @@ export default function BookPage() {
   // Step 1: Model
   const [selectedDeviceType, setSelectedDeviceType] = useState<'iphone' | 'ipad' | 'watch'>('iphone');
   const [modelSearch, setModelSearch] = useState('');
-  const [selectedModel, setSelectedModel] = useState<any | null>({
-    id: 'ip-15-pm',
-    name: 'iPhone 15 Pro Max',
-    series: 'iPhone 15 Series',
-  });
+  const [selectedModel, setSelectedModel] = useState<any | null>(null);
 
   // Step 2: Services
-  const [selectedServices, setSelectedServices] = useState<string[]>(['screen']);
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [customIssueDesc, setCustomIssueDesc] = useState('');
 
   // Step 3: Area & Slot
-  const [selectedArea, setSelectedArea] = useState<any>({
-    id: 'maadi',
-    name: 'المعادي',
-    city: 'القاهرة',
-    fee: 0,
-  });
+  const [selectedArea, setSelectedArea] = useState<any | null>(null);
   const [address, setAddress] = useState('');
   const [propertyType, setPropertyType] = useState<'home' | 'office'>('home');
-  const [selectedDate, setSelectedDate] = useState('2026-10-03');
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
   const [selectedSlot, setSelectedSlot] = useState('13:00 - 16:00');
 
   // Step 4: Customer Details
@@ -62,9 +53,11 @@ export default function BookPage() {
   const [termsAccepted, setTermsAccepted] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [dataLoading, setDataLoading] = useState(true);
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
   // Available Data
-  const models = [
+  const [models, setModels] = useState<any[]>([
     { id: 'ip-16-pm', type: 'iphone', series: 'iPhone 16 Series', name: 'iPhone 16 Pro Max' },
     { id: 'ip-16-p', type: 'iphone', series: 'iPhone 16 Series', name: 'iPhone 16 Pro' },
     { id: 'ip-16', type: 'iphone', series: 'iPhone 16 Series', name: 'iPhone 16' },
@@ -74,9 +67,9 @@ export default function BookPage() {
     { id: 'ip-14-pm', type: 'iphone', series: 'iPhone 14 Series', name: 'iPhone 14 Pro Max' },
     { id: 'ip-14-p', type: 'iphone', series: 'iPhone 14 Series', name: 'iPhone 14 Pro' },
     { id: 'ip-13', type: 'iphone', series: 'iPhone 13 Series', name: 'iPhone 13' },
-  ];
+  ]);
 
-  const servicesList = [
+  const [servicesList, setServicesList] = useState<any[]>([
     {
       id: 'screen',
       title: 'تغيير شاشة أصلية',
@@ -118,9 +111,9 @@ export default function BookPage() {
       warranty: 'ضمان حسب العطل',
       duration: '30 دقيقة',
     },
-  ];
+  ]);
 
-  const areasList = [
+  const [areasList, setAreasList] = useState<any[]>([
     { id: 'maadi', name: 'المعادي', city: 'القاهرة', fee: 0 },
     { id: 'nasr-city', name: 'مدينة نصر', city: 'القاهرة', fee: 0 },
     { id: 'heliopolis', name: 'مصر الجديدة', city: 'القاهرة', fee: 0 },
@@ -129,15 +122,61 @@ export default function BookPage() {
     { id: 'sheikh-zayed', name: 'الشيخ زايد', city: 'الجيزة', fee: 0 },
     { id: '6-october', name: '6 أكتوبر والواحات', city: 'الجيزة', fee: 0 },
     { id: 'shorouk', name: 'الشروق ومدينتي', city: 'القاهرة', fee: 0 },
-  ];
+  ]);
 
-  const availableDays = [
-    { date: '2026-10-03', day: 'السبت', label: '3 أكتوبر' },
-    { date: '2026-10-04', day: 'الأحد', label: '4 أكتوبر' },
-    { date: '2026-10-05', day: 'الإثنين', label: '5 أكتوبر' },
-    { date: '2026-10-06', day: 'الثلاثاء', label: '6 أكتوبر' },
-    { date: '2026-10-07', day: 'الأربعاء', label: '7 أكتوبر' },
-  ];
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      fetch(`${apiBase}/pricing?type=iphone`).then((r) => r.json()),
+      fetch(`${apiBase}/areas`).then((r) => r.json()),
+    ]).then(([pricing, remoteAreas]) => {
+      if (cancelled || !pricing?.series || !Array.isArray(remoteAreas)) return;
+      const remoteModels = pricing.series.flatMap((series: any) => series.models.map((model: any) => ({
+        id: model.id, name: model.name, series: series.title, cells: model.cells,
+      })));
+      const remoteServices = pricing.columns.map((service: any) => ({
+        id: service.id, slug: service.slug, title: service.name_ar, desc: service.name_ar,
+        price: 0, discountPrice: 0, warranty: 'حسب الخدمة', duration: `${service.estimatedMinutes} دقيقة`,
+      }));
+      const mappedAreas = remoteAreas.map((area: any) => ({
+        id: area.id, name: area.name_ar, city: area.city_ar, fee: Number(area.transport_fee || 0), slug: area.slug,
+      }));
+      setModels(remoteModels);
+      setServicesList(remoteServices);
+      setAreasList(mappedAreas);
+      setSelectedModel(remoteModels[0] || null);
+      setSelectedServices(remoteServices[0] ? [remoteServices[0].id] : []);
+      setSelectedArea(mappedAreas[0] || null);
+    }).catch(() => {
+      if (!cancelled) setFormError('تعذر تحميل بيانات الحجز من الخادم.');
+    }).finally(() => {
+      if (!cancelled) setDataLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [apiBase]);
+
+  useEffect(() => {
+    if (!selectedModel?.cells) return;
+    setServicesList((current) => current.map((service) => {
+      const cell = selectedModel.cells[service.slug];
+      return cell ? {
+        ...service,
+        price: Number(cell.price || 0),
+        discountPrice: Number(cell.discountPrice || cell.price || 0),
+        warranty: `${cell.warrantyDays || 0} يوم ضمان`,
+      } : service;
+    }));
+  }, [selectedModel]);
+
+  const availableDays = useMemo(() => {
+    const formatter = new Intl.DateTimeFormat('ar-EG', { weekday: 'long', day: 'numeric', month: 'long' });
+    return Array.from({ length: 5 }, (_, index) => {
+      const date = new Date();
+      date.setHours(12, 0, 0, 0);
+      date.setDate(date.getDate() + index);
+      return { date: date.toISOString().slice(0, 10), day: formatter.format(date), label: formatter.format(date) };
+    });
+  }, []);
 
   const timeSlots = [
     { label: 'صباحاً: 10:00 ص - 01:00 م', time: '10:00 - 13:00' },
@@ -196,8 +235,23 @@ export default function BookPage() {
     setIsSubmitting(true);
 
     try {
-      // Simulate or call API: POST /api/v1/bookings
-      const bookingNumber = `FM-2026-${Math.floor(10000 + Math.random() * 90000)}`;
+      if (!selectedModel?.id || !selectedArea?.id || !selectedServices.length) {
+        throw new Error('بيانات الحجز غير مكتملة');
+      }
+      const response = await fetch(`${apiBase}/bookings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Idempotency-Key': crypto.randomUUID() },
+        body: JSON.stringify({
+          name: customerName.trim(), phone: customerPhone.trim(),
+          whatsappNumber: sameWhatsapp ? customerPhone.trim() : whatsappNumber.trim(),
+          email: customerEmail.trim(), modelId: selectedModel.id, serviceIds: selectedServices,
+          areaId: selectedArea.id, slotDate: selectedDate, slotLabel: selectedSlot,
+          address: address.trim(), propertyType, notes: notes.trim() || undefined, termsAccepted,
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'تعذر إنشاء الحجز');
+      const bookingNumber = result.bookingNumber;
 
       // Save order snapshot in sessionStorage for safe receipt view
       sessionStorage.setItem(
@@ -213,11 +267,12 @@ export default function BookPage() {
           slotTime: selectedSlot,
           address,
           total: grandTotal,
+          confirmationToken: result.confirmationToken,
         })
       );
 
       // Redirect to success page without leaking PII in the URL
-      router.push(`/book/success?bookingNumber=${bookingNumber}`);
+      router.push(`/book/success?bookingNumber=${encodeURIComponent(bookingNumber)}&token=${encodeURIComponent(result.confirmationToken)}`);
     } catch (err: any) {
       setFormError('حدث خطأ أثناء إرسال الحجز، يرجى المحاولة مرة أخرى.');
     } finally {
@@ -478,7 +533,7 @@ export default function BookPage() {
                     اختر منطقتك (القاهرة والجيزة)
                   </label>
                   <select
-                    value={selectedArea.id}
+                    value={selectedArea?.id || ''}
                     onChange={(e) => {
                       const found = areasList.find((a) => a.id === e.target.value);
                       if (found) setSelectedArea(found);
