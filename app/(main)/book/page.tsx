@@ -227,6 +227,11 @@ export default function BookPage() {
       return;
     }
 
+    if (customerName.trim().length < 2) {
+      setFormError('يرجى إدخال اسم صحيح لا يقل عن حرفين.');
+      return;
+    }
+
     if (!/^01[0125][0-9]{8}$/.test(customerPhone.trim())) {
       setFormError('يرجى إدخال رقم هاتف مصري صحيح يبدأ بـ 01 (11 رقماً).');
       return;
@@ -274,7 +279,7 @@ export default function BookPage() {
       // Redirect to success page without leaking PII in the URL
       router.push(`/book/success?bookingNumber=${encodeURIComponent(bookingNumber)}&token=${encodeURIComponent(result.confirmationToken)}`);
     } catch (err: any) {
-      setFormError('حدث خطأ أثناء إرسال الحجز، يرجى المحاولة مرة أخرى.');
+      setFormError(err?.message && err.message !== 'Failed to fetch' ? err.message : 'حدث خطأ أثناء إرسال الحجز، يرجى المحاولة مرة أخرى.');
     } finally {
       setIsSubmitting(false);
     }
