@@ -7,10 +7,9 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Navigation, Pagination } from "swiper/modules";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import i18n from "@/src/i18n";
 
 export const Slider = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const images = [
     "/image1.jpeg",
     "/image2.jpeg",

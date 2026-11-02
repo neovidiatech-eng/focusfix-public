@@ -2,6 +2,31 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Clock, Calendar, ChevronLeft, ArrowRight, ShieldCheck, Wrench, Share2 } from "lucide-react";
+import sanitizeHtml from "sanitize-html";
+
+// Admin-authored HTML from the CMS — allowlist the tags the TipTap editor produces
+function sanitizeArticleHtml(html: string): string {
+  return sanitizeHtml(html, {
+    allowedTags: sanitizeHtml.defaults.allowedTags.concat(["img", "h1", "h2", "figure", "figcaption"]),
+    allowedAttributes: {
+      a: ["href", "title", "target", "rel"],
+      img: ["src", "alt", "title", "width", "height", "loading"],
+      "*": ["dir", "lang"],
+    },
+    allowedSchemes: ["http", "https", "mailto", "tel"],
+    transformTags: {
+      a: sanitizeHtml.simpleTransform("a", { rel: "noopener noreferrer" }),
+    },
+  });
+}
+
+function toPlainText(html: string): string {
+  return sanitizeHtml(html, { allowedTags: [], allowedAttributes: {} }).replace(/\s+/g, " ").trim();
+}
+
+function escapeJsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, "\\u003c");
+}
 
 interface Article {
   slug: string;
@@ -11,6 +36,9 @@ interface Article {
   publishedAt: string;
   coverImage: string;
   content: string[];
+  /** Sanitized HTML body from the CMS; when set it replaces `content` paragraphs */
+  html?: string;
+  description?: string;
 }
 
 const ARTICLES: Record<string, Article> = {
@@ -93,7 +121,9 @@ async function fetchLiveArticle(slug: string): Promise<Article | null> {
           readTime: `${data.reading_minutes || 4} دقائق`,
           publishedAt: data.published_at ? new Date(data.published_at).toLocaleDateString('ar-EG') : 'حديثاً',
           coverImage: data.featured_image || '/image1.jpeg',
-          content: data.content_html ? [data.content_html] : [data.excerpt_ar || ''],
+          content: [data.excerpt_ar || ''],
+          html: data.content_html ? sanitizeArticleHtml(data.content_html) : undefined,
+          description: data.meta_desc_ar || data.excerpt_ar || (data.content_html ? toPlainText(data.content_html).slice(0, 160) : ''),
         };
       }
     }
@@ -107,16 +137,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const article = (await fetchLiveArticle(slug)) || ARTICLES[slug];
   if (!article) return { title: "المقال غير موجود | FocusFix" };
+  const description = article.description || article.content[0] || '';
 
   return {
     title: `${article.title} | مدونة FocusFix`,
-    description: article.content[0]?.replace(/<[^>]*>/g, '') || '',
+    description,
     alternates: {
       canonical: `https://focusfix.net/blog/${article.slug}`,
     },
     openGraph: {
       title: article.title,
-      description: article.content[0]?.replace(/<[^>]*>/g, '') || '',
+      description,
       images: [article.coverImage],
     },
   };
@@ -135,7 +166,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     headline: article.title,
-    image: [`https://focusfix.net${article.coverImage}`],
+    image: [article.coverImage.startsWith("http") ? article.coverImage : `https://focusfix.net${article.coverImage}`],
     datePublished: article.publishedAt,
     author: {
       "@type": "Organization",
@@ -150,14 +181,14 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         url: "https://focusfix.net/logo1.jpeg",
       },
     },
-    description: article.content[0],
+    description: article.description || article.content[0],
   };
 
   return (
     <div className="min-h-screen bg-slate-50 pt-28 pb-20">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: escapeJsonLd(articleJsonLd) }}
       />
 
       <article className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -204,13 +235,20 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         </div>
 
         {/* Content */}
-        <div className="prose prose-slate max-w-none text-slate-700 leading-relaxed text-base sm:text-lg space-y-6">
-          {article.content.map((paragraph, idx) => (
-            <p key={idx} className="leading-relaxed">
-              {paragraph}
-            </p>
-          ))}
-        </div>
+        {article.html ? (
+          <div
+            className="max-w-none text-slate-700 leading-relaxed text-base sm:text-lg space-y-6 [&_h1]:text-2xl [&_h1]:font-black [&_h1]:text-slate-900 [&_h2]:text-xl [&_h2]:sm:text-2xl [&_h2]:font-bold [&_h2]:text-slate-900 [&_h2]:mt-10 [&_h3]:text-lg [&_h3]:font-bold [&_h3]:text-slate-900 [&_h3]:mt-8 [&_ul]:list-disc [&_ul]:ps-6 [&_ol]:list-decimal [&_ol]:ps-6 [&_li]:my-1 [&_a]:text-brand-600 [&_a]:underline [&_blockquote]:border-s-4 [&_blockquote]:border-brand-200 [&_blockquote]:ps-4 [&_blockquote]:text-slate-600 [&_img]:rounded-2xl [&_img]:my-6 [&_strong]:text-slate-900"
+            dangerouslySetInnerHTML={{ __html: article.html }}
+          />
+        ) : (
+          <div className="max-w-none text-slate-700 leading-relaxed text-base sm:text-lg space-y-6">
+            {article.content.map((paragraph, idx) => (
+              <p key={idx} className="leading-relaxed">
+                {paragraph}
+              </p>
+            ))}
+          </div>
+        )}
 
         {/* Action card */}
         <div className="mt-12 bg-white rounded-2xl border border-brand-200 p-6 sm:p-8 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">

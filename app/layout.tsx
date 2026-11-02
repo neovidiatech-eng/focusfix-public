@@ -4,9 +4,10 @@ import { I18nProvider } from "@/src/providers/I18nProvider";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 import Script from "next/script";
 import { QueryProvider } from "@/src/providers/QueryProvider";
+import { SITE_URL } from "@/src/shared/utils/site";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://focus-fastestrepair.com"),
+  metadataBase: new URL(SITE_URL),
   title: "Focus Fix | أسرع خدمة صيانة آيفون في مصر - تصليح في المنزل خلال 30 دقيقة",
   description:
     "Focus Fix — أسرع خدمة صيانة آيفون في مصر. بنجيلك مكانك ونصلح شاشتك، بطاريتك، ظهرك، وكاميرتك في أقل من 30 دقيقة بقطع غيار أصلية وضمان سنة كاملة.",
@@ -26,7 +27,7 @@ export const metadata: Metadata = {
     title: "Focus Fix | أسرع خدمة صيانة آيفون في مصر",
     description:
       "بنجيلك مكانك ونصلح آيفونك في 30 دقيقة بقطع غيار أصلية وضمان سنة.",
-    url: "https://focus-fastestrepair.com",
+    url: SITE_URL,
     siteName: "Focus Fix",
     locale: "ar_EG",
     type: "website",
@@ -58,7 +59,7 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "https://focus-fastestrepair.com",
+    canonical: SITE_URL,
   },
   icons: {
     icon: "/logo1.jpeg",
@@ -94,10 +95,10 @@ export default function RootLayout({
               alternateName: "فوكس فيكس",
               description:
                 "أسرع خدمة صيانة آيفون في مصر - بنجيلك مكانك ونصلح موبايلك في 30 دقيقة",
-              url: "https://focus-fastestrepair.com",
+              url: SITE_URL,
               telephone: "+201009911934",
-              email: "info@focus-fastestrepair.com",
-              image: "https://focus-fastestrepair.com/logo1.jpeg",
+              email: "support@focusfix.net",
+              image: `${SITE_URL}/logo1.jpeg`,
               address: {
                 "@type": "PostalAddress",
                 streetAddress: "عمارة 47 شارع الدقي ميدان الدقي",
