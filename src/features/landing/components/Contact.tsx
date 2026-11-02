@@ -11,7 +11,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
 import { useRef } from "react";
 import emailjs from "@emailjs/browser";
+import { displayPhone, telHref, whatsappHref } from "@/src/shared/utils/settings";
+import { useSiteSettings } from "@/src/providers/SiteSettingsProvider";
 export const Contact = () => {
+  const settings = useSiteSettings();
   const { t } = useTranslation();
 
   const contactSchema = z.object({
@@ -248,10 +251,10 @@ export const Contact = () => {
                       {t("contact.info.whatsapp")}
                     </div>
                     <a
-                      href="https://wa.me/201009911934"
+                      href={whatsappHref(settings.whatsapp)}
                       className="text-white/80 hover:text-white transition-colors"
                     >
-                      01009911934
+                      {displayPhone(settings.phone)}
                     </a>
                   </div>
                 </div>
@@ -265,10 +268,10 @@ export const Contact = () => {
                       {t("contact.info.phone")}
                     </div>
                     <a
-                      href="tel:01009911934"
+                      href={telHref(settings.phone)}
                       className="text-white/80 hover:text-white transition-colors"
                     >
-                      01009911934
+                      {displayPhone(settings.phone)}
                     </a>
                   </div>
                 </div>

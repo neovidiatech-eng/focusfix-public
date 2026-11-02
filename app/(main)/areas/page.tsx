@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { MapPin, ArrowRight, ShieldCheck, Clock, CheckCircle2, Phone, HelpCircle } from "lucide-react";
 import { InnerHero } from "@/src/shared/components/ui/InnerHero";
+import { displayPhone, whatsappHref, getSiteSettings } from "@/src/shared/utils/settings";
 
 export const metadata: Metadata = {
   title: "المناطق المشمولة بالصيانة المنزلية في القاهرة والجيزة | FocusFix",
@@ -40,6 +41,7 @@ async function getAreas() {
 }
 
 export default async function AreasIndexPage() {
+  const settings = await getSiteSettings();
   const displayAreas = await getAreas();
 
   return (
@@ -149,13 +151,13 @@ export default async function AreasIndexPage() {
                 احجز موعد صيانة الآن
               </Link>
               <a
-                href="https://wa.me/201009911934"
+                href={whatsappHref(settings.whatsapp)}
                 target="_blank"
                 rel="noreferrer"
                 className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-xl transition-all flex items-center gap-2 text-sm shadow-lg hover:shadow-emerald-600/20"
               >
                 <Phone className="w-4 h-4" />
-                <span>تواصل واتساب: 01009911934</span>
+                <span>تواصل واتساب: {displayPhone(settings.whatsapp)}</span>
               </a>
             </div>
           </div>

@@ -14,8 +14,11 @@ import { SubtleWaves, SubtleGrid } from "@/src/shared/components/ui/hero-backgro
 
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
+import { whatsappHref } from "@/src/shared/utils/settings";
+import { useSiteSettings } from "@/src/providers/SiteSettingsProvider";
 
 export const Hero = () => {
+  const settings = useSiteSettings();
   const { t } = useTranslation();
 
   return (
@@ -43,7 +46,7 @@ export const Hero = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <a href="https://wa.me/201009911934" target="_blank">
+                <a href={whatsappHref(settings.whatsapp)} target="_blank">
                   <Button
                     variant="solid"
                     size="lg"

@@ -2,6 +2,7 @@ import React from "react";
 import { Metadata } from "next";
 import { Users, Briefcase, CheckCircle2, Mail, Phone, Sparkles } from "lucide-react";
 import { InnerHero } from "@/src/shared/components/ui/InnerHero";
+import { whatsappHref, getSiteSettings } from "@/src/shared/utils/settings";
 
 export const metadata: Metadata = {
   title: "انضم لفريق فنيي ومهندسي FocusFix | فرص عمل صيانة أبل",
@@ -9,7 +10,8 @@ export const metadata: Metadata = {
     "هل أنت فني أو مهندس صيانة أبل محترف؟ انضم إلى فريق FocusFix لتقديم أرقى خدمة صيانة منزلية في القاهرة والجيزة بدخل متميز وبيئة عمل متطورة.",
 };
 
-export default function JoinPage() {
+export default async function JoinPage() {
+  const settings = await getSiteSettings();
   const perks = [
     "دخل شهري مجزي وعمولات فورية على كل عملية صيانة ناجحة",
     "توفير أحدث معدات الصيانة الدقيقة وأدوات الفحص المتطورة",
@@ -92,7 +94,7 @@ export default function JoinPage() {
               <span>أرسل سيرتك الذاتية (CV)</span>
             </a>
             <a
-              href="https://wa.me/201009911934?text=مرحباً، أود التقديم لوظيفة فني صيانة في FocusFix"
+              href={whatsappHref(settings.whatsapp, "مرحباً، أود التقديم لوظيفة فني صيانة في FocusFix")}
               target="_blank"
               rel="noreferrer"
               className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-xl transition-all flex items-center gap-2 text-sm shadow-md"

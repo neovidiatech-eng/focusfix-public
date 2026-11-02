@@ -5,7 +5,11 @@ export async function POST(req: NextRequest) {
   try {
     // Accept the secret via x-revalidate-secret header (sent by backend)
     // OR via Authorization: Bearer header (legacy support)
-    const secret = process.env.REVALIDATION_SECRET || "focusfix_revalidate_secret";
+    // REVALIDATE_SECRET must match the API's value; REVALIDATION_SECRET kept for older deployments
+    const secret = process.env.REVALIDATE_SECRET || process.env.REVALIDATION_SECRET;
+    if (!secret) {
+      return NextResponse.json({ success: false, message: "Revalidation is not configured" }, { status: 503 });
+    }
     const xSecret = req.headers.get("x-revalidate-secret");
     const authHeader = req.headers.get("authorization");
 
@@ -17,7 +21,8 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { paths = [], tags = [] } = body;
+    const paths: string[] = Array.isArray(body?.paths) ? body.paths.filter((p: unknown) => typeof p === "string" && p.startsWith("/")) : [];
+    const tags: string[] = Array.isArray(body?.tags) ? body.tags.filter((t: unknown) => typeof t === "string") : [];
 
     for (const p of paths) {
       revalidatePath(p);
@@ -33,7 +38,7 @@ export async function POST(req: NextRequest) {
       revalidatedTags: tags,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ success: false, error: "Invalid revalidation request" }, { status: 400 });
   }
 }

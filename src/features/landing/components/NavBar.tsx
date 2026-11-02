@@ -8,8 +8,11 @@ import { useTranslation } from "react-i18next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { TopAnnouncementBar } from "./TopAnnouncementBar";
+import { displayPhone, telHref } from "@/src/shared/utils/settings";
+import { useSiteSettings } from "@/src/providers/SiteSettingsProvider";
 
 export const Navbar = () => {
+  const settings = useSiteSettings();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { t, i18n } = useTranslation();
@@ -70,14 +73,14 @@ export const Navbar = () => {
             <Globe size={18} />
             <span>{i18n.language === "ar" ? "English" : "عربي"}</span>
           </Button>
-          <a href="tel:01009911934" className="hidden sm:block">
+          <a href={telHref(settings.phone)} className="hidden sm:block">
             <Button
               variant="solid"
               size="sm"
               className="bg-brand-100 text-white hover:bg-brand-400 flex items-center gap-2"
             >
               <Phone size={16} />
-              <span>01009911934</span>
+              <span>{displayPhone(settings.phone)}</span>
             </Button>
           </a>
           <Button
@@ -119,7 +122,7 @@ export const Navbar = () => {
                     {link.name}
                   </Link>
               ))}
-              <a href="tel:01009911934" className="block sm:hidden">
+              <a href={telHref(settings.phone)} className="block sm:hidden">
                 <Button
                   variant="solid"
                   className="w-full bg-brand-100 text-white flex items-center justify-center gap-2"

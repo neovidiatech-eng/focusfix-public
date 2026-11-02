@@ -265,18 +265,7 @@ export default function PricesPage() {
                               const cell = m.cells[col.slug];
                               return (
                                 <td key={col.id} className="py-4 px-4 text-center">
-                                  {cell && cell.price > 0 ? (
-                                    <div>
-                                      <div className="font-extrabold text-slate-900">
-                                        {(cell.discountPrice || cell.price).toLocaleString()} ج.م
-                                      </div>
-                                      <span className="text-[10px] text-emerald-700 font-semibold block mt-0.5">
-                                        ضمان {cell.warrantyDays} يوم
-                                      </span>
-                                    </div>
-                                  ) : (
-                                    <span className="text-xs text-slate-300 font-medium">—</span>
-                                  )}
+                                  <PriceCellView cell={cell} />
                                 </td>
                               );
                             })}
@@ -314,7 +303,7 @@ export default function PricesPage() {
                         <div className="grid grid-cols-2 gap-2 text-xs">
                           {columns.map((col) => {
                             const cell = m.cells[col.slug];
-                            if (!cell || !cell.price) return null;
+                            if (!cell || (cell.status !== 'available' && cell.status !== 'on_request')) return null;
                             return (
                               <div
                                 key={col.id}
@@ -323,12 +312,7 @@ export default function PricesPage() {
                                 <span className="text-slate-500 block text-[10px]">
                                   {col.name_ar}:
                                 </span>
-                                <span className="font-bold text-slate-900">
-                                  {(cell.discountPrice || cell.price).toLocaleString()} ج.م
-                                </span>
-                                <span className="text-[9px] text-emerald-700 block font-semibold">
-                                  ضمان {cell.warrantyDays} يوم
-                                </span>
+                                <PriceCellView cell={cell} compact />
                               </div>
                             );
                           })}
@@ -387,6 +371,27 @@ export default function PricesPage() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function PriceCellView({ cell, compact = false }: { cell?: PriceCell; compact?: boolean }) {
+  if (!cell || (cell.status !== 'available' && cell.status !== 'on_request')) {
+    return <span className="text-xs text-slate-300 font-medium">—</span>;
+  }
+  if (cell.status === 'on_request' || !cell.price) {
+    return <span className="text-xs text-amber-700 font-bold">يحدد بعد الفحص</span>;
+  }
+  const hasDiscount = !!cell.discountPrice && cell.discountPrice < cell.price;
+  return (
+    <div>
+      <div className={`font-extrabold text-slate-900 ${compact ? 'text-xs' : ''}`}>
+        {(hasDiscount ? cell.discountPrice! : cell.price).toLocaleString('en-US')} ج.م
+      </div>
+      {hasDiscount && <div className="text-[10px] text-slate-400 line-through">{cell.price.toLocaleString('en-US')} ج.م</div>}
+      <span className={`${compact ? 'text-[9px]' : 'text-[10px] mt-0.5'} text-emerald-700 font-semibold block`}>
+        {cell.warrantyDays ? `ضمان ${cell.warrantyDays} يوم` : 'بدون ضمان'}
+      </span>
     </div>
   );
 }

@@ -12,6 +12,8 @@ import {
   Smartphone,
   ChevronLeft,
 } from "lucide-react";
+import { API_BASE_URL, SITE_URL } from "@/src/shared/utils/site";
+import { getSiteSettings, whatsappHref } from "@/src/shared/utils/settings";
 
 interface AreaDetail {
   slug: string;
@@ -116,28 +118,72 @@ const AREAS_MAP: Record<string, AreaDetail> = {
   },
 };
 
+interface LiveArea {
+  slug: string;
+  name_ar: string;
+  name_en: string;
+  city_ar: string;
+  transport_fee: string;
+  intro_ar: string | null;
+  seo_title: string | null;
+  seo_desc: string | null;
+}
+
+/** Area from the API (managed in the dashboard), enriched with the hand-written copy above when it exists */
+async function getArea(slug: string): Promise<(AreaDetail & { transportFee: number; seoTitle?: string; seoDesc?: string }) | null> {
+  let live: LiveArea | null = null;
+  try {
+    const res = await fetch(`${API_BASE_URL}/areas/${encodeURIComponent(slug)}`, { next: { revalidate: 300, tags: ["areas"] } });
+    if (res.ok) live = await res.json();
+    else if (res.status === 404) return null;
+  } catch {
+    // API unreachable: fall back to the static copy
+  }
+  const copy = AREAS_MAP[slug];
+  if (!live && !copy) return null;
+
+  const nameAr = live?.name_ar || copy!.nameAr;
+  return {
+    slug,
+    nameAr: copy?.nameAr && live?.name_ar && copy.nameAr.includes(live.name_ar) ? copy.nameAr : nameAr,
+    nameEn: live?.name_en || copy?.nameEn || nameAr,
+    governorate: live?.city_ar || copy?.governorate || "القاهرة",
+    eta: copy?.eta || "30 - 60 دقيقة",
+    description:
+      live?.intro_ar ||
+      copy?.description ||
+      `خدمة صيانة آيفون وأجهزة Apple منزلية في ${nameAr}. فني متخصص يصلك في المنزل أو العمل ويصلح جهازك أمام عينك بقطع غيار أصلية وضمان معتمد.`,
+    neighborhoods: copy?.neighborhoods || [nameAr],
+    transportFee: Number(live?.transport_fee || 0),
+    seoTitle: live?.seo_title || undefined,
+    seoDesc: live?.seo_desc || undefined,
+  };
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const area = AREAS_MAP[slug];
+  const area = await getArea(slug);
   if (!area) return { title: "المنطقة غير موجودة | FocusFix" };
 
+  const title = area.seoTitle || `صيانة آيفون وأبل منزلية في ${area.nameAr} | تصليح فوري FocusFix`;
+  const description = area.seoDesc || area.description;
   return {
-    title: `صيانة آيفون وأبل منزلية في ${area.nameAr} | تصليح فوري FocusFix`,
-    description: area.description,
+    title,
+    description,
     alternates: {
-      canonical: `https://focusfix.net/areas/${area.slug}`,
+      canonical: `${SITE_URL}/areas/${area.slug}`,
     },
     openGraph: {
-      title: `صيانة آيفون فورية في ${area.nameAr} | FocusFix`,
-      description: area.description,
-      url: `https://focusfix.net/areas/${area.slug}`,
+      title,
+      description,
+      url: `${SITE_URL}/areas/${area.slug}`,
     },
   };
 }
 
 export default async function AreaDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const area = AREAS_MAP[slug];
+  const [area, settings] = await Promise.all([getArea(slug), getSiteSettings()]);
 
   if (!area) {
     notFound();
@@ -148,9 +194,9 @@ export default async function AreaDetailPage({ params }: { params: Promise<{ slu
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     name: `FocusFix صيانة أبل المنزلية - ${area.nameAr}`,
-    image: "https://focusfix.net/logo1.jpeg",
-    telephone: "+201009911934",
-    url: `https://focusfix.net/areas/${area.slug}`,
+    image: `${SITE_URL}/logo1.jpeg`,
+    telephone: settings.phone,
+    url: `${SITE_URL}/areas/${area.slug}`,
     priceRange: "$$",
     address: {
       "@type": "PostalAddress",
@@ -177,7 +223,7 @@ export default async function AreaDetailPage({ params }: { params: Promise<{ slu
     <div className="min-h-screen bg-slate-50 pt-28 pb-20">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd).replace(/</g, "\\u003c") }}
       />
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -230,7 +276,9 @@ export default async function AreaDetailPage({ params }: { params: Promise<{ slu
               <MapPin className="w-8 h-8 text-blue-600 shrink-0" />
               <div>
                 <p className="text-xs text-slate-400">رسوم الانتقال</p>
-                <p className="font-bold text-emerald-600">مجاناً (0 ج.م)</p>
+                <p className={`font-bold ${area.transportFee === 0 ? "text-emerald-600" : "text-slate-800"}`}>
+                  {area.transportFee === 0 ? "مجاناً (0 ج.م)" : `${area.transportFee} ج.م`}
+                </p>
               </div>
             </div>
           </div>
@@ -238,13 +286,13 @@ export default async function AreaDetailPage({ params }: { params: Promise<{ slu
           {/* Action buttons */}
           <div className="flex flex-wrap items-center gap-4">
             <Link
-              href="/book"
+              href={`/book?area=${area.slug}`}
               className="bg-brand-600 hover:bg-brand-500 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg hover:shadow-brand-600/25 transition-all text-base"
             >
               احجز فني صيانة في {area.nameAr}
             </Link>
             <a
-              href="https://wa.me/201009911934"
+              href={whatsappHref(settings.whatsapp, `مرحباً، أريد حجز صيانة في ${area.nameAr}`)}
               target="_blank"
               rel="noreferrer"
               className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3.5 rounded-xl transition-all flex items-center gap-2 text-base shadow-lg hover:shadow-emerald-600/25"
@@ -317,7 +365,7 @@ export default async function AreaDetailPage({ params }: { params: Promise<{ slu
             اختر موديل جهازك والخدمة المطلوبة، وحدد الموعد الأنسب لك وسيقوم فنينا بزيارتك فوراً.
           </p>
           <Link
-            href="/book"
+            href={`/book?area=${area.slug}`}
             className="inline-block bg-brand-600 hover:bg-brand-500 text-white font-bold px-8 py-3 rounded-xl transition-all"
           >
             بدء حجز الصيانة

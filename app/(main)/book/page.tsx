@@ -20,6 +20,12 @@ import {
   Check,
 } from 'lucide-react';
 import { InnerHero } from '@/src/shared/components/ui/InnerHero';
+import { useSiteSettings } from '@/src/providers/SiteSettingsProvider';
+
+// Bookings are scheduled in Cairo time regardless of the visitor's device clock
+function cairoToday(): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Cairo' }).format(new Date());
+}
 
 interface ApiSlot {
   id: string;
@@ -48,6 +54,8 @@ function BookContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlModelId = searchParams.get('model');
+  const urlAreaSlug = searchParams.get('area');
+  const siteSettings = useSiteSettings();
 
   // Current Step: 1, 2, 3, 4
   const [step, setStep] = useState<number>(1);
@@ -66,7 +74,9 @@ function BookContent() {
   const [areaSearch, setAreaSearch] = useState('');
   const [address, setAddress] = useState('');
   const [propertyType, setPropertyType] = useState<'home' | 'office'>('home');
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(cairoToday());
   const [selectedSlot, setSelectedSlot] = useState('13:00 - 16:00');
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
   // null = area has no slots configured for that day → fall back to the default periods
@@ -88,7 +98,7 @@ function BookContent() {
 
   // Live Data directly from DB
   const [models, setModels] = useState<any[]>([]);
-  const [servicesList, setServicesList] = useState<any[]>([]);
+  const [serviceColumns, setServiceColumns] = useState<any[]>([]);
   const [areasList, setAreasList] = useState<any[]>([]);
 
   // 1. Initial Load of Areas
@@ -106,7 +116,7 @@ function BookContent() {
           slug: area.slug,
         }));
         setAreasList(mappedAreas);
-        setSelectedArea(mappedAreas[0] || null);
+        setSelectedArea(mappedAreas.find((a: any) => a.slug === urlAreaSlug) || mappedAreas[0] || null);
       })
       .catch(() => {})
       .finally(() => {
@@ -115,7 +125,7 @@ function BookContent() {
     return () => {
       cancelled = true;
     };
-  }, [apiBase]);
+  }, [apiBase, urlAreaSlug]);
 
   // 2. Dynamic Models & Services Load based on selectedDeviceType
   useEffect(() => {
@@ -140,18 +150,14 @@ function BookContent() {
           setSelectedModel(remoteModels[0] || null);
 
           if (pricing.columns && Array.isArray(pricing.columns) && pricing.columns.length > 0) {
-            const remoteServices = pricing.columns.map((service: any) => ({
-              id: service.id,
-              slug: service.slug,
-              title: service.name_ar,
-              desc: service.name_ar,
-              price: 0,
-              discountPrice: 0,
-              warranty: 'حسب الخدمة',
-              duration: `${service.estimatedMinutes || 25} دقيقة`,
-            }));
-            setServicesList(remoteServices);
-            setSelectedServices(remoteServices[0] ? [remoteServices[0].id] : []);
+            setServiceColumns(
+              pricing.columns.map((service: any) => ({
+                id: service.id,
+                slug: service.slug,
+                title: service.name_ar,
+                duration: `${service.estimatedMinutes || 25} دقيقة`,
+              }))
+            );
           }
         } else {
           // If pricing matrix not populated, fetch models directly from catalog
@@ -194,18 +200,36 @@ function BookContent() {
     }
   }, [urlModelId, models]);
 
+  // Only services the selected model actually offers, priced from its own pricing cells
+  const servicesList = useMemo(() => {
+    const cells = selectedModel?.cells || {};
+    return serviceColumns.flatMap((service) => {
+      const cell = cells[service.slug];
+      if (!cell || (cell.status !== 'available' && cell.status !== 'on_request')) return [];
+      const onRequest = cell.status === 'on_request' || !cell.price;
+      const price = onRequest ? 0 : Number(cell.price);
+      const discount = !onRequest && cell.discountPrice && Number(cell.discountPrice) < price ? Number(cell.discountPrice) : null;
+      return [
+        {
+          ...service,
+          desc: cell.note_ar || (onRequest ? 'يتم تحديد السعر بعد الفحص' : 'قطع غيار أصلية مع التركيب أمامك'),
+          price,
+          discountPrice: discount,
+          onRequest,
+          warranty: cell.warrantyDays ? `${cell.warrantyDays} يوم ضمان` : 'بدون ضمان',
+        },
+      ];
+    });
+  }, [serviceColumns, selectedModel]);
+
+  // Keep the selection valid when the model (and so its services) changes
   useEffect(() => {
-    if (!selectedModel?.cells) return;
-    setServicesList((current) => current.map((service) => {
-      const cell = selectedModel.cells[service.slug];
-      return cell ? {
-        ...service,
-        price: Number(cell.price || 0),
-        discountPrice: Number(cell.discountPrice || cell.price || 0),
-        warranty: `${cell.warrantyDays || 0} يوم ضمان`,
-      } : service;
-    }));
-  }, [selectedModel]);
+    setSelectedServices((current) => {
+      const kept = current.filter((id) => servicesList.some((s) => s.id === id));
+      if (kept.length > 0) return kept;
+      return servicesList[0] ? [servicesList[0].id] : [];
+    });
+  }, [servicesList]);
 
   const filteredAreas = useMemo(() => {
     if (!areaSearch.trim()) return areasList;
@@ -217,15 +241,18 @@ function BookContent() {
     );
   }, [areasList, areaSearch]);
 
+  const daysAhead = Math.min(30, Math.max(1, Number(siteSettings.booking_days_ahead) || 7));
   const availableDays = useMemo(() => {
-    const formatter = new Intl.DateTimeFormat('ar-EG', { weekday: 'long', day: 'numeric', month: 'long' });
-    return Array.from({ length: 5 }, (_, index) => {
-      const date = new Date();
-      date.setHours(12, 0, 0, 0);
-      date.setDate(date.getDate() + index);
-      return { date: date.toISOString().slice(0, 10), day: formatter.format(date), label: formatter.format(date) };
+    const weekday = new Intl.DateTimeFormat('ar-EG', { weekday: 'long', timeZone: 'UTC' });
+    const dayMonth = new Intl.DateTimeFormat('ar-EG', { day: 'numeric', month: 'long', timeZone: 'UTC' });
+    const start = new Date(`${cairoToday()}T12:00:00Z`);
+    return Array.from({ length: daysAhead }, (_, index) => {
+      const date = new Date(start);
+      date.setUTCDate(start.getUTCDate() + index);
+      const label = index === 0 ? 'اليوم' : index === 1 ? 'غداً' : weekday.format(date);
+      return { date: date.toISOString().slice(0, 10), day: label, label: dayMonth.format(date) };
     });
-  }, []);
+  }, [daysAhead]);
 
   // Live slots + remaining capacity for the chosen area/day
   useEffect(() => {
@@ -280,9 +307,9 @@ function BookContent() {
   const servicesTotal = useMemo(() => {
     return selectedServices.reduce((acc, sId) => {
       const s = servicesList.find((item) => item.id === sId);
-      return acc + (s ? s.discountPrice || s.price : 0);
+      return acc + (s ? s.discountPrice ?? s.price : 0);
     }, 0);
-  }, [selectedServices]);
+  }, [selectedServices, servicesList]);
 
   const transportFee = selectedArea?.fee || 0;
   const grandTotal = servicesTotal + transportFee;
@@ -298,16 +325,23 @@ function BookContent() {
   };
 
   const handleUseCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        () => {
-          setAddress('تم تحديد الإحداثيات الجغرافية لموقعك بنجاح');
-        },
-        () => {
-          alert('تعذر الوصول للموقع التلقائي، يرجى كتابة العنوان يدوياً.');
-        }
-      );
+    if (!navigator.geolocation) {
+      setFormError('متصفحك لا يدعم تحديد الموقع، يرجى كتابة العنوان يدوياً.');
+      return;
     }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        // Coordinates go to the technician as a map pin; the written address stays for building/floor details
+        setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLocating(false);
+      },
+      () => {
+        setLocating(false);
+        setFormError('تعذر الوصول لموقعك. اسمح للمتصفح بالوصول للموقع أو اكتب العنوان يدوياً.');
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   };
 
   const handleSubmitBooking = async (e: React.FormEvent) => {
@@ -344,6 +378,7 @@ function BookContent() {
           email: customerEmail.trim(), modelId: selectedModel.id, serviceIds: selectedServices,
           areaId: selectedArea.id, slotId: selectedSlotId || undefined, slotDate: selectedDate, slotLabel: selectedSlot,
           address: address.trim(), propertyType, notes: notes.trim() || undefined, termsAccepted,
+          locationLat: location?.lat, locationLng: location?.lng,
         }),
       });
       const result = await response.json();
@@ -499,9 +534,11 @@ function BookContent() {
                       .map((m) => {
                         const isSelected = selectedModel?.id === m.id;
                         return (
-                          <div
+                          <button
+                            type="button"
                             key={m.id}
                             onClick={() => setSelectedModel(m)}
+                            aria-pressed={isSelected}
                             className={`p-3.5 rounded-xl border text-center cursor-pointer transition-all ${
                               isSelected
                                 ? 'border-emerald-600 bg-emerald-50/50 ring-2 ring-emerald-600/20'
@@ -515,7 +552,7 @@ function BookContent() {
                             />
                             <div className="font-bold text-xs text-slate-900">{m.name}</div>
                             <div className="text-[10px] text-slate-400 mt-0.5">{m.series}</div>
-                          </div>
+                          </button>
                         );
                       })
                   )}
@@ -545,13 +582,21 @@ function BookContent() {
                 </div>
 
                 <div className="space-y-3">
+                  {servicesList.length === 0 && (
+                    <div className="py-8 px-4 text-center text-sm text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                      لا توجد خدمات متاحة أونلاين لهذا الموديل حالياً. تواصل معنا على واتساب وسنساعدك فوراً.
+                    </div>
+                  )}
                   {servicesList.map((service) => {
                     const isChecked = selectedServices.includes(service.id);
                     return (
-                      <div
+                      <button
+                        type="button"
+                        role="checkbox"
+                        aria-checked={isChecked}
                         key={service.id}
                         onClick={() => toggleService(service.id)}
-                        className={`p-4 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
+                        className={`w-full text-right p-4 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
                           isChecked
                             ? 'border-emerald-600 bg-emerald-50/40 ring-1 ring-emerald-600'
                             : 'border-slate-200 hover:border-slate-300 bg-white'
@@ -583,13 +628,13 @@ function BookContent() {
                           </div>
                         </div>
 
-                        <div className="text-left font-extrabold text-slate-900">
-                          {service.price > 0 ? (
+                        <div className="text-left font-extrabold text-slate-900 shrink-0">
+                          {!service.onRequest ? (
                             <div>
-                              <span>{service.discountPrice || service.price} ج.م</span>
-                              {service.discountPrice && (
+                              <span>{(service.discountPrice ?? service.price).toLocaleString('en-US')} ج.م</span>
+                              {service.discountPrice !== null && (
                                 <span className="block text-[11px] text-slate-400 line-through font-normal">
-                                  {service.price} ج.م
+                                  {service.price.toLocaleString('en-US')} ج.م
                                 </span>
                               )}
                             </div>
@@ -597,7 +642,7 @@ function BookContent() {
                             <span className="text-xs text-slate-500 font-semibold">فحص وسعر لاحق</span>
                           )}
                         </div>
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
@@ -613,7 +658,7 @@ function BookContent() {
                   <button
                     disabled={selectedServices.length === 0}
                     onClick={() => setStep(3)}
-                    className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center gap-2 shadow-sm"
+                    className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl flex items-center gap-2 shadow-sm"
                   >
                     <span>المتابعة للمكان والموعد</span>
                     <ArrowLeft className="w-4 h-4" />
@@ -679,8 +724,8 @@ function BookContent() {
                       onClick={handleUseCurrentLocation}
                       className="text-[11px] text-emerald-600 hover:text-emerald-700 font-bold flex items-center gap-1"
                     >
-                      <Navigation className="w-3 h-3" />
-                      <span>موقعي الحالي</span>
+                      <Navigation className={`w-3 h-3 ${locating ? 'animate-pulse' : ''}`} />
+                      <span>{locating ? 'جاري التحديد…' : location ? 'تم تحديد موقعك ✓' : 'إرسال موقعي على الخريطة'}</span>
                     </button>
                   </div>
                   <input
@@ -924,7 +969,7 @@ function BookContent() {
                     return (
                       <div key={id} className="flex justify-between font-semibold text-slate-700">
                         <span>{s.title}</span>
-                        <span>{s.discountPrice || s.price} ج.م</span>
+                        <span>{s.onRequest ? 'بعد الفحص' : `${(s.discountPrice ?? s.price).toLocaleString('en-US')} ج.م`}</span>
                       </div>
                     );
                   })}

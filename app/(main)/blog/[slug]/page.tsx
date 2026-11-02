@@ -110,7 +110,7 @@ const ARTICLES: Record<string, Article> = {
 async function fetchLiveArticle(slug: string): Promise<Article | null> {
   const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
   try {
-    const res = await fetch(`${apiBase}/blog/posts/${slug}`, { next: { revalidate: 60 } });
+    const res = await fetch(`${apiBase}/blog/posts/${slug}`, { next: { revalidate: 60, tags: ['blog'] } });
     if (res.ok) {
       const data = await res.json();
       if (data && data.title_ar) {

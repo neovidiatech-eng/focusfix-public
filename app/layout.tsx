@@ -5,6 +5,8 @@ import { AntdRegistry } from "@ant-design/nextjs-registry";
 import Script from "next/script";
 import { QueryProvider } from "@/src/providers/QueryProvider";
 import { SITE_URL } from "@/src/shared/utils/site";
+import { getSiteSettings } from "@/src/shared/utils/settings";
+import { SiteSettingsProvider } from "@/src/providers/SiteSettingsProvider";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -67,11 +69,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const settings = await getSiteSettings();
   return (
     <html lang="ar" dir="rtl">
       <head>
@@ -96,8 +99,8 @@ export default function RootLayout({
               description:
                 "أسرع خدمة صيانة آيفون في مصر - بنجيلك مكانك ونصلح موبايلك في 30 دقيقة",
               url: SITE_URL,
-              telephone: "+201009911934",
-              email: "support@focusfix.net",
+              telephone: settings.phone,
+              email: settings.supportEmail,
               image: `${SITE_URL}/logo1.jpeg`,
               address: {
                 "@type": "PostalAddress",
@@ -121,8 +124,8 @@ export default function RootLayout({
                   "Saturday",
                   "Sunday",
                 ],
-                opens: "09:00",
-                closes: "22:00",
+                opens: settings.working_hours_start,
+                closes: settings.working_hours_end,
               },
               hasOfferCatalog: {
                 "@type": "OfferCatalog",
@@ -188,7 +191,9 @@ export default function RootLayout({
 
         <AntdRegistry>
           <QueryProvider>
-            <I18nProvider>{children}</I18nProvider>
+            <SiteSettingsProvider settings={settings}>
+              <I18nProvider>{children}</I18nProvider>
+            </SiteSettingsProvider>
           </QueryProvider>
         </AntdRegistry>
       </body>

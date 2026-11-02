@@ -14,8 +14,11 @@ import { Button } from "@/src/shared/components/ui/neon-button";
 import { SubtleGrid } from "@/src/shared/components/ui/hero-background";
 
 import { useTranslation } from "react-i18next";
+import { whatsappHref } from "@/src/shared/utils/settings";
+import { useSiteSettings } from "@/src/providers/SiteSettingsProvider";
 
 export const Services = () => {
+  const settings = useSiteSettings();
   const { t } = useTranslation();
 
   const services = [
@@ -83,7 +86,7 @@ export const Services = () => {
               <h4 className="text-2xl font-bold mb-4 text-slate-900">{service.title}</h4>
               <p className="text-slate-600 mb-6 leading-relaxed font-medium">{service.desc}</p>
               <div className="flex justify-start">
-                <a href="https://wa.me/201009911934">
+                <a href={whatsappHref(settings.whatsapp)}>
                   <Button
                     variant="ghost"
                     className="text-brand-100 font-bold flex items-center gap-2 group-hover:gap-4 transition-all p-0 border-none hover:bg-transparent"

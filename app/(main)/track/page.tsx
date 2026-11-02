@@ -4,8 +4,11 @@ import React, { useState } from "react";
 import { Search, ShieldCheck, Clock, MapPin, CheckCircle2, AlertCircle, Phone, Calendar } from "lucide-react";
 import Link from "next/link";
 import { InnerHero } from "@/src/shared/components/ui/InnerHero";
+import { whatsappHref } from "@/src/shared/utils/settings";
+import { useSiteSettings } from "@/src/providers/SiteSettingsProvider";
 
 export default function TrackBookingPage() {
+  const settings = useSiteSettings();
   const [bookingCode, setBookingCode] = useState("");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
@@ -166,7 +169,7 @@ export default function TrackBookingPage() {
             {/* Quick CTAs */}
             <div className="pt-4 border-t border-slate-100 flex flex-wrap gap-3">
               <a
-                href="https://wa.me/201009911934"
+                href={whatsappHref(settings.whatsapp)}
                 target="_blank"
                 rel="noreferrer"
                 className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition-all"

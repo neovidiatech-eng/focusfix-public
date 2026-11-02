@@ -14,33 +14,73 @@ import {
   ChevronRight,
   Download,
 } from 'lucide-react';
+import { whatsappHref } from "@/src/shared/utils/settings";
+import { useSiteSettings } from "@/src/providers/SiteSettingsProvider";
 
 function BookingSuccessContent() {
+  const settings = useSiteSettings();
   const searchParams = useSearchParams();
-  const bookingNumber = searchParams.get('bookingNumber') || 'FM-2026-00351';
-
+  const token = searchParams.get('token');
   const [orderData, setOrderData] = useState<any>(null);
+  const bookingNumber = searchParams.get('bookingNumber') || orderData?.bookingNumber || '';
 
   useEffect(() => {
     const saved = sessionStorage.getItem('focusfix_last_booking');
     if (saved) {
       try {
-        setOrderData(JSON.parse(saved));
-      } catch (e) {}
+        const parsed = JSON.parse(saved);
+        if (!searchParams.get('bookingNumber') || parsed.bookingNumber === searchParams.get('bookingNumber')) {
+          setOrderData(parsed);
+          return;
+        }
+      } catch {
+        // ignore corrupted storage
+      }
     }
-  }, []);
+    // Opened from another device / tab: load the booking by its confirmation token
+    if (!token) return;
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+    fetch(`${apiBase}/bookings/confirmation/${encodeURIComponent(token)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((b) => {
+        if (!b) return;
+        setOrderData({
+          bookingNumber: b.bookingNumber,
+          device: b.device,
+          area: b.area,
+          slotDate: String(b.slotDate).slice(0, 10),
+          slotTime: b.slotLabel,
+          total: Number(b.estimatedTotal),
+          services: (b.services || []).map((x: any) => x.name),
+        });
+      })
+      .catch(() => {});
+  }, [searchParams, token]);
 
   const handleDownloadICS = () => {
-    const icsContent = `BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//FocusFix//Appointment//EN
-BEGIN:VEVENT
-SUMMARY:موعد صيانة أبل FocusFix (${bookingNumber})
-DESCRIPTION:زيارة فني FocusFix لصيانة الجهاز مع ضمان معتمد.
-LOCATION:القاهرة والجيزة
-STATUS:CONFIRMED
-END:VEVENT
-END:VCALENDAR`;
+    // "10:00 - 13:00" on "2026-11-03" → local Cairo start/end
+    const [start = '10:00', end = '13:00'] = String(orderData?.slotTime || '').match(/\d{2}:\d{2}/g) || [];
+    const day = String(orderData?.slotDate || '').replace(/-/g, '');
+    const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    const timing = day
+      ? `DTSTART;TZID=Africa/Cairo:${day}T${start.replace(':', '')}00\r\nDTEND;TZID=Africa/Cairo:${day}T${end.replace(':', '')}00`
+      : '';
+    const icsContent = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//FocusFix//Appointment//AR',
+      'BEGIN:VEVENT',
+      `UID:${bookingNumber}@focusfix.net`,
+      `DTSTAMP:${stamp}`,
+      timing,
+      `SUMMARY:موعد صيانة FocusFix (${bookingNumber})`,
+      `DESCRIPTION:زيارة فني FocusFix لصيانة ${orderData?.device || 'جهازك'}.`,
+      `LOCATION:${orderData?.address || orderData?.area || 'القاهرة والجيزة'}`,
+      'END:VEVENT',
+      'END:VCALENDAR',
+    ]
+      .filter(Boolean)
+      .join('\r\n');
 
     const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
     const link = document.createElement('a');
@@ -86,7 +126,7 @@ END:VCALENDAR`;
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <a
-              href={`https://wa.me/201009911934?text=${whatsappMessage}`}
+              href={`${whatsappHref(settings.whatsapp)}?text=${whatsappMessage}`}
               target="_blank"
               rel="noreferrer"
               className="w-full sm:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2"
@@ -152,7 +192,15 @@ END:VCALENDAR`;
             <div className="grid grid-cols-2 gap-2 text-slate-600">
               <div>الجهاز: <strong className="text-slate-900">{orderData.device}</strong></div>
               <div>المنطقة: <strong className="text-slate-900">{orderData.area}</strong></div>
-              <div>الموعد: <strong className="text-slate-900">{orderData.slotDate} ({orderData.slotTime})</strong></div>
+              <div>
+                الموعد:{' '}
+                <strong className="text-slate-900">
+                  {orderData.slotDate
+                    ? new Intl.DateTimeFormat('ar-EG', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }).format(new Date(orderData.slotDate))
+                    : ''}{' '}
+                  ({String(orderData.slotTime || '').replace(/(\d{2}):(\d{2})/g, (_: string, h: string, m: string) => `${Number(h) % 12 || 12}:${m} ${Number(h) < 12 ? 'ص' : 'م'}`)})
+                </strong>
+              </div>
               <div>الإجمالي: <strong className="text-emerald-600">{orderData.total} ج.م</strong></div>
             </div>
           </div>

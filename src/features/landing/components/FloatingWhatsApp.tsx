@@ -3,7 +3,10 @@
 import { motion } from "framer-motion";
 import { Button } from "@/src/shared/components/ui/neon-button";
 import { MessageSquare } from "lucide-react";
+import { whatsappHref } from "@/src/shared/utils/settings";
+import { useSiteSettings } from "@/src/providers/SiteSettingsProvider";
 export const FloatingWhatsApp = () => {
+  const settings = useSiteSettings();
   return (
     <motion.div
       initial={{ scale: 0, opacity: 0 }}
@@ -13,7 +16,7 @@ export const FloatingWhatsApp = () => {
       className="fixed bottom-8 inset-e-8 z-100"
     >
       <a
-        href="https://wa.me/201009911934"
+        href={whatsappHref(settings.whatsapp)}
         target="_blank"
         rel="noopener noreferrer"
       >

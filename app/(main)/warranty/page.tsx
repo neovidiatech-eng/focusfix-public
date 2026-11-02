@@ -4,8 +4,11 @@ import React from "react";
 import { ShieldCheck, FileText, Phone } from "lucide-react";
 import { InnerHero } from "@/src/shared/components/ui/InnerHero";
 import { useTranslation } from "react-i18next";
+import { whatsappHref } from "@/src/shared/utils/settings";
+import { useSiteSettings } from "@/src/providers/SiteSettingsProvider";
 
 export default function WarrantyPage() {
+  const settings = useSiteSettings();
   const { t } = useTranslation();
 
   const warrantyFeatures = [
@@ -95,7 +98,7 @@ export default function WarrantyPage() {
               </p>
             </div>
             <a
-              href="https://wa.me/201009911934"
+              href={whatsappHref(settings.whatsapp)}
               target="_blank"
               rel="noreferrer"
               className="shrink-0 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-xl transition-all flex items-center gap-2 text-xs shadow-md"
