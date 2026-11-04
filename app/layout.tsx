@@ -1,12 +1,31 @@
 import type { Metadata } from "next";
+import type { Viewport } from "next";
+import { IBM_Plex_Sans_Arabic, Readex_Pro } from "next/font/google";
 import "./globals.css";
-import { I18nProvider } from "@/src/providers/I18nProvider";
-import { AntdRegistry } from "@ant-design/nextjs-registry";
 import Script from "next/script";
-import { QueryProvider } from "@/src/providers/QueryProvider";
 import { SITE_URL } from "@/src/shared/utils/site";
 import { getSiteSettings } from "@/src/shared/utils/settings";
 import { SiteSettingsProvider } from "@/src/providers/SiteSettingsProvider";
+
+const body = IBM_Plex_Sans_Arabic({
+  subsets: ["arabic", "latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-body",
+  display: "swap",
+});
+
+const display = Readex_Pro({
+  subsets: ["arabic", "latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-display-face",
+  display: "swap",
+});
+
+export const viewport: Viewport = {
+  themeColor: "#f6f4ef",
+  width: "device-width",
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -76,7 +95,7 @@ export default async function RootLayout({
 }) {
   const settings = await getSiteSettings();
   return (
-    <html lang="ar" dir="rtl">
+    <html lang="ar" dir="rtl" className={`${body.variable} ${display.variable}`}>
       <head>
         {/* Google Tag Manager */}
         <Script id="gtm-script" strategy="afterInteractive">
@@ -189,13 +208,7 @@ export default async function RootLayout({
           />
         </noscript>
 
-        <AntdRegistry>
-          <QueryProvider>
-            <SiteSettingsProvider settings={settings}>
-              <I18nProvider>{children}</I18nProvider>
-            </SiteSettingsProvider>
-          </QueryProvider>
-        </AntdRegistry>
+        <SiteSettingsProvider settings={settings}>{children}</SiteSettingsProvider>
       </body>
     </html>
   );

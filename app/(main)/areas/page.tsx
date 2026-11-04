@@ -1,168 +1,76 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import Link from "next/link";
-import { MapPin, ArrowRight, ShieldCheck, Clock, CheckCircle2, Phone, HelpCircle } from "lucide-react";
-import { InnerHero } from "@/src/shared/components/ui/InnerHero";
-import { displayPhone, whatsappHref, getSiteSettings } from "@/src/shared/utils/settings";
+import { ArrowLeft, MapPin, Search } from "lucide-react";
+import { PageHero, Container } from "@/src/components/ui/Section";
+import { Reveal } from "@/src/components/ui/Reveal";
+import { CtaBand } from "@/src/components/site/CtaBand";
+import { getAreas } from "@/src/lib/api";
+import { feeLabel } from "@/src/lib/format";
+import { getSiteSettings, whatsappHref } from "@/src/shared/utils/settings";
+import { SITE_URL } from "@/src/shared/utils/site";
 
 export const metadata: Metadata = {
-  title: "المناطق المشمولة بالصيانة المنزلية في القاهرة والجيزة | FocusFix",
-  description:
-    "تعرف على جميع المناطق التي نغطيها بخدمة صيانة أبل المنزلية الفورية في القاهرة والجيزة. فني متخصص يصلك حتى باب بيتك.",
-  alternates: {
-    canonical: "https://focusfix.net/areas",
-  },
+  title: "مناطق خدمة صيانة الآيفون في القاهرة والجيزة | FocusFix",
+  description: "شوف المناطق اللي بنوصلها في القاهرة والجيزة، ورسوم الانتقال والمواعيد المتاحة في كل منطقة.",
+  alternates: { canonical: `${SITE_URL}/areas` },
 };
 
-async function getAreas() {
-  const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://foucs.agro-plus.net/api/v1';
-  try {
-    const res = await fetch(`${apiBase}/areas`, {
-      next: { revalidate: 60, tags: ['areas'] },
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
-        return data.map((a: any) => ({
-          nameAr: a.name_ar,
-          nameEn: a.name_en || a.name_ar,
-          slug: a.slug,
-          governorate: a.city_ar || 'القاهرة',
-          travelFee: Number(a.transport_fee || 0),
-          eta: '30 - 45 دقيقة',
-          neighborhoods: [a.name_ar],
-          isPopular: Number(a.transport_fee || 0) === 0,
-        }));
-      }
-    }
-  } catch (err) {
-    console.warn('Failed to fetch live areas on server:', err);
-  }
-  return [];
-}
-
-export default async function AreasIndexPage() {
-  const settings = await getSiteSettings();
-  const displayAreas = await getAreas();
+export default async function AreasPage() {
+  const [areas, settings] = await Promise.all([getAreas(), getSiteSettings()]);
+  const byCity = areas.reduce<Record<string, typeof areas>>((acc, a) => {
+    (acc[a.city_ar || "أخرى"] ||= []).push(a);
+    return acc;
+  }, {});
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20">
-      <InnerHero
-        breadcrumb={[
-          { label: "الرئيسية", href: "/" },
-          { label: "مناطق التغطية والزيارات" },
-        ]}
-        badge="تغطية كاملة للقاهرة الكبرى والجيزة"
-        badgeIcon={<MapPin className="w-4 h-4 text-brand-600" />}
-        title="صيانة أبل الفورية"
-        highlightedTitle="عند باب بيتك"
-        description="فريق فنيي FocusFix المتخصص يصلك أينما كنت في أسرع وقت. نصلح شاشات وبطاريات الآيفون وأجهزة أبل أمام عينك بقطع غيار أصلية وضمان معتمد."
-      >
-        <div className="flex flex-wrap justify-center items-center gap-4 text-xs sm:text-sm font-semibold text-slate-700">
-          <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow-xs border border-slate-200">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            <span>رسوم انتقال مجانية تماماً (0 ج.م)</span>
-          </div>
-          <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow-xs border border-slate-200">
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>ضمان رسمي يصل إلى سنة</span>
-          </div>
-          <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow-xs border border-slate-200">
-            <Clock className="w-4 h-4 text-emerald-600" />
-            <span>تصليح فوري خلال 25 دقيقة</span>
-          </div>
+    <>
+      <PageHero
+        crumbs={[{ label: "الرئيسية", href: "/" }, { label: "المناطق" }]}
+        eyebrow={`${areas.length} منطقة`}
+        title="بنوصلك فين؟"
+        desc="اختار منطقتك عشان تشوف المواعيد المتاحة ورسوم الانتقال، واحجز على طول."
+      />
+
+      <Container className="py-14 sm:py-20">
+        <div className="space-y-12">
+          {Object.entries(byCity).map(([city, list]) => (
+            <section key={city}>
+              <h2 className="mb-5 font-display text-2xl font-semibold">{city}</h2>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {list.map((a, i) => (
+                  <Reveal key={a.id} delay={Math.min(i * 0.04, 0.3)} y={14}>
+                    <Link href={`/areas/${a.slug}`} className="group flex items-center gap-4 rounded-2xl bg-white p-5 shadow-soft ring-1 ring-ink/5 transition-all hover:-translate-y-0.5 hover:ring-brand-200">
+                      <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-500 transition-colors group-hover:bg-brand-500 group-hover:text-white">
+                        <MapPin className="h-5 w-5" />
+                      </span>
+                      <span className="flex-1">
+                        <span className="block text-lg font-semibold">{a.name_ar}</span>
+                        <span className="num text-sm text-ink-3">{feeLabel(a.transport_fee)}</span>
+                      </span>
+                      <ArrowLeft className="h-5 w-5 text-ink-3 transition-transform group-hover:-translate-x-1 group-hover:text-brand-500" />
+                    </Link>
+                  </Reveal>
+                ))}
+              </div>
+            </section>
+          ))}
         </div>
-      </InnerHero>
 
-      {/* Grid of Areas */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-20">
-        {displayAreas.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {displayAreas.map((area) => (
-              <Link
-                key={area.slug}
-                href={`/areas/${area.slug}`}
-                className="group block bg-white rounded-2xl border border-slate-200 p-6 shadow-xs hover:shadow-md hover:border-brand-300 transition-all duration-200"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-brand-50 border border-brand-100 flex items-center justify-center text-brand-600 group-hover:bg-brand-600 group-hover:text-white transition-colors">
-                    <MapPin className="w-5 h-5" />
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      {area.travelFee === 0 ? 'انتقال مجاني' : `+${area.travelFee} ج.م`}
-                    </span>
-                    <span className="text-[11px] text-slate-400 mt-1">{area.governorate}</span>
-                  </div>
-                </div>
-
-                <h2 className="text-xl font-bold text-slate-900 group-hover:text-brand-600 transition-colors mb-1">
-                  {area.nameAr}
-                </h2>
-                <p className="text-xs text-slate-500 mb-4">{area.nameEn}</p>
-
-                <div className="text-xs text-slate-600 space-y-1.5 mb-5 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400">متوسط الوصول:</span>
-                    <span className="font-semibold text-slate-700">{area.eta}</span>
-                  </div>
-                  <div className="text-slate-500 line-clamp-1">
-                    <span className="text-slate-400">المنطقة: </span>
-                    {area.neighborhoods.join(" · ")}
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between text-brand-600 font-bold text-sm pt-2 border-t border-slate-100 group-hover:translate-x-[-2px] transition-transform">
-                  <span>عرض خدمات وصيانة المنطقة</span>
-                  <ArrowRight className="w-4 h-4 rtl:rotate-180" />
-                </div>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="bg-white rounded-2xl p-12 text-center border border-slate-200">
-            <HelpCircle className="w-10 h-10 text-slate-400 mx-auto mb-3" />
-            <h3 className="text-base font-bold text-slate-900">يتم تحديث قائمة مناطق التغطية حالياً</h3>
-            <p className="text-xs text-slate-500 mt-1 mb-4">
-              نغطي جميع مناطق القاهرة الكبرى والجيزة، يمكنك حجز موعد وسيتواصل معك الفني مباشرة
-            </p>
-            <Link
-              href="/book"
-              className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-bold inline-block"
-            >
-              احجز موعد في منطقتك
-            </Link>
-          </div>
-        )}
-
-        {/* CTA Banner */}
-        <div className="mt-16 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-8 sm:p-12 text-white relative overflow-hidden shadow-xl border border-slate-700">
-          <div className="relative z-10 max-w-2xl">
-            <h3 className="text-2xl sm:text-3xl font-black mb-3">
-              منطقتك غير موجودة بالقائمة؟
-            </h3>
-            <p className="text-slate-300 text-sm sm:text-base mb-6 leading-relaxed">
-              تواصل مباشرة مع خدمة عملاء FocusFix عبر الهاتف أو الواتساب، وفريقنا سيقوم بترتيب أقرب فني متخصص لزيارتك في نفس اليوم.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <Link
-                href="/book"
-                className="bg-brand-500 hover:bg-brand-400 text-white font-bold px-6 py-3 rounded-xl transition-all shadow-lg hover:shadow-brand-500/20 text-sm"
-              >
-                احجز موعد صيانة الآن
-              </Link>
-              <a
-                href={whatsappHref(settings.whatsapp)}
-                target="_blank"
-                rel="noreferrer"
-                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-xl transition-all flex items-center gap-2 text-sm shadow-lg hover:shadow-emerald-600/20"
-              >
-                <Phone className="w-4 h-4" />
-                <span>تواصل واتساب: {displayPhone(settings.whatsapp)}</span>
-              </a>
+        <Reveal className="mt-14 flex flex-col items-start gap-4 rounded-[1.75rem] border-2 border-dashed border-line p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+          <div className="flex items-center gap-4">
+            <Search className="h-8 w-8 text-ink-3" />
+            <div>
+              <h2 className="text-xl font-semibold">منطقتك مش موجودة؟</h2>
+              <p className="text-ink-2">ابعتلنا اسم المنطقة، وغالباً هنقدر نوصلك.</p>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
+          <a href={whatsappHref(settings.whatsapp, "أهلاً، عايز أعرف لو بتوصلوا منطقة: ")} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand-600 hover:underline">
+            اسألنا واتساب ←
+          </a>
+        </Reveal>
+      </Container>
+
+      <CtaBand settings={settings} />
+    </>
   );
 }

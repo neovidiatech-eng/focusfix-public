@@ -13,6 +13,7 @@ const STATIC_ROUTES: Array<{ path: string; priority: number; changeFrequency: Me
   { path: "/warranty", priority: 0.5, changeFrequency: "yearly" },
   { path: "/track", priority: 0.4, changeFrequency: "yearly" },
   { path: "/join", priority: 0.3, changeFrequency: "yearly" },
+  { path: "/contact", priority: 0.4, changeFrequency: "yearly" },
 ];
 
 async function fetchJson(path: string): Promise<unknown> {

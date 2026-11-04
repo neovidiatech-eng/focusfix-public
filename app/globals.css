@@ -1,95 +1,130 @@
-@import url('https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-app);
+  --font-sans: var(--font-body), "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --font-display: var(--font-display-face), var(--font-body), system-ui, sans-serif;
 
-  --color-brand-100: #1e3174;
-  --color-brand-200: #0e071e;
-  --color-brand-300: #26254e;
-  --color-brand-400: #162261;
-  --color-brand-500: #19153c;
-  --color-brand-600: #242c62;
-  --color-brand-700: #17122f;
-  --color-brand-800: #1b1b4d;
-  --color-brand-900: #2e4183;
+  /* Warm paper + ink */
+  --color-paper: #f6f4ef;
+  --color-paper-2: #efece4;
+  --color-ink: #12141c;
+  --color-ink-2: #4a4f5e;
+  --color-ink-3: #8a8f9c;
+  --color-line: #e4e0d6;
 
-  --color-primary: var(--color-brand-100);
-  --color-primary-dark: var(--color-brand-400);
-  --color-accent: var(--color-brand-900);
+  /* Brand cobalt (derived from the navy logo) */
+  --color-brand-50: #eef1ff;
+  --color-brand-100: #dbe1ff;
+  --color-brand-200: #b8c3ff;
+  --color-brand-400: #5b74ff;
+  --color-brand-500: #2b4bf2;
+  --color-brand-600: #1f39d1;
+  --color-brand-700: #182ca3;
+  --color-brand-800: #13207a;
+  --color-brand-900: #0d1650;
+
+  /* Accent tangerine — used sparingly for offers and highlights */
+  --color-accent-50: #fff3e9;
+  --color-accent-100: #ffe2c9;
+  --color-accent-500: #ff7a1a;
+  --color-accent-600: #e9630a;
+
+  --radius-xl2: 1.25rem;
+  --shadow-soft: 0 1px 2px rgb(18 20 28 / 0.04), 0 8px 24px -12px rgb(18 20 28 / 0.12);
+  --shadow-lift: 0 2px 4px rgb(18 20 28 / 0.04), 0 24px 48px -20px rgb(18 20 28 / 0.25);
+
+  --animate-marquee: marquee 40s linear infinite;
+  --animate-float-slow: float 6s ease-in-out infinite;
+  --animate-pulse-ring: pulse-ring 2.2s cubic-bezier(0.2, 0.6, 0.4, 1) infinite;
 }
 
-:root {
-  --font-app: "Alexandria", "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+@keyframes rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
 }
 
-html[lang="en"], [dir="ltr"] {
-  --font-app: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+.rise { animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(50%); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgb(18 161 80 / 0.45); }
+  80%, 100% { box-shadow: 0 0 0 10px rgb(18 161 80 / 0); }
 }
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 100px;
-  @apply bg-slate-50;
+  scroll-padding-top: 88px;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  @apply bg-slate-50 text-slate-900 overflow-x-hidden;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.glass {
-  @apply bg-slate-50/70 backdrop-blur-xl border border-slate-200 shadow-sm;
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
 }
 
-.gradient-text {
-  @apply bg-clip-text text-transparent bg-linear-to-r from-brand-100 via-brand-400 to-brand-900;
+::selection {
+  background: var(--color-brand-100);
+  color: var(--color-brand-900);
 }
 
-.gradient-bg {
-  @apply bg-linear-to-r from-brand-100 via-brand-400 to-brand-900;
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+  border-radius: 6px;
 }
 
-/* Custom animations */
-@keyframes float {
-  0% {
-    transform: translateY(0px);
+/* Western digits everywhere for prices & times */
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Subtle paper grain behind hero sections */
+.grain {
+  background-image: radial-gradient(rgb(18 20 28 / 0.045) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+/* Rich text from the CMS */
+.prose-ff { color: var(--color-ink-2); line-height: 1.95; font-size: 1.0625rem; }
+.prose-ff > * + * { margin-top: 1.1em; }
+.prose-ff h1, .prose-ff h2, .prose-ff h3 { color: var(--color-ink); font-weight: 700; line-height: 1.4; margin-top: 2em; }
+.prose-ff h1 { font-size: 1.75rem; }
+.prose-ff h2 { font-size: 1.5rem; }
+.prose-ff h3 { font-size: 1.2rem; }
+.prose-ff a { color: var(--color-brand-600); text-decoration: underline; text-underline-offset: 3px; }
+.prose-ff ul { list-style: disc; padding-inline-start: 1.4rem; }
+.prose-ff ol { list-style: decimal; padding-inline-start: 1.4rem; }
+.prose-ff li { margin: 0.35em 0; }
+.prose-ff blockquote { border-inline-start: 3px solid var(--color-brand-500); padding-inline-start: 1rem; color: var(--color-ink); font-weight: 500; }
+.prose-ff img { border-radius: 1rem; margin: 1.5em 0; }
+.prose-ff strong { color: var(--color-ink); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
-
-  50% {
-    transform: translateY(-10px);
-  }
-
-  100% {
-    transform: translateY(0px);
-  }
-}
-
-@keyframes spotlight {
-  0% {
-    opacity: 0;
-    transform: translate(-72%, -62%) scale(0.5);
-  }
-
-  100% {
-    opacity: 1;
-    transform: translate(-50%, -40%) scale(1);
-  }
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-.animate-spotlight {
-  animation: spotlight 2s ease .75s 1 forwards;
-}
-
-/* Hide scrollbar but keep functionality */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
 }
