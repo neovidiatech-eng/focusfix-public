@@ -1,7 +1,7 @@
-import DynamicLoader from "./DynamicLoader";
+import ClientPage from "./ClientPage";
 
 // Server Component — metadata + JSON-LD live in layout.tsx
-// The actual interactive content loads client-side via DynamicLoader
+// ClientPage is a client component but is still server-rendered so crawlers get the full HTML
 export default function HomePage() {
-  return <DynamicLoader />;
+  return <ClientPage />;
 }

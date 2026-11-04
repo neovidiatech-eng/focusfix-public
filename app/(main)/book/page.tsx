@@ -21,6 +21,29 @@ import {
 } from 'lucide-react';
 import { InnerHero } from '@/src/shared/components/ui/InnerHero';
 
+interface ApiSlot {
+  id: string;
+  startTime: string;
+  endTime: string;
+  label: string;
+  remaining: number;
+  available: boolean;
+}
+
+// "13:00" → "01:00 م"
+function to12h(time: string): string {
+  const [h, m] = time.split(':').map(Number);
+  const hour12 = h % 12 === 0 ? 12 : h % 12;
+  return `${String(hour12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${h < 12 ? 'ص' : 'م'}`;
+}
+
+function periodLabel(start: string): string {
+  const h = Number(start.split(':')[0]);
+  if (h < 12) return 'صباحاً';
+  if (h < 16) return 'ظهراً';
+  return 'مساءً';
+}
+
 function BookContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -45,6 +68,10 @@ function BookContent() {
   const [propertyType, setPropertyType] = useState<'home' | 'office'>('home');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
   const [selectedSlot, setSelectedSlot] = useState('13:00 - 16:00');
+  const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
+  // null = area has no slots configured for that day → fall back to the default periods
+  const [apiSlots, setApiSlots] = useState<ApiSlot[] | null>(null);
+  const [slotsLoading, setSlotsLoading] = useState(false);
 
   // Step 4: Customer Details
   const [customerName, setCustomerName] = useState('');
@@ -200,11 +227,54 @@ function BookContent() {
     });
   }, []);
 
-  const timeSlots = [
-    { label: 'صباحاً: 10:00 ص - 01:00 م', time: '10:00 - 13:00' },
-    { label: 'ظهراً: 01:00 م - 04:00 م', time: '13:00 - 16:00' },
-    { label: 'مساءً: 04:00 م - 07:00 م', time: '16:00 - 19:00' },
-  ];
+  // Live slots + remaining capacity for the chosen area/day
+  useEffect(() => {
+    if (!selectedArea?.id || !selectedDate) return;
+    let cancelled = false;
+    setSlotsLoading(true);
+    fetch(`${apiBase}/bookings/availability?area_id=${encodeURIComponent(selectedArea.id)}&date=${selectedDate}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled) return;
+        const slots: ApiSlot[] | null = data?.configured ? data.slots : null;
+        setApiSlots(slots);
+        if (slots) {
+          const firstAvailable = slots.find((sl) => sl.available);
+          setSelectedSlotId(firstAvailable?.id || null);
+          if (firstAvailable) setSelectedSlot(firstAvailable.label);
+        } else {
+          setSelectedSlotId(null);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setApiSlots(null);
+          setSelectedSlotId(null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setSlotsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [apiBase, selectedArea?.id, selectedDate]);
+
+  const timeSlots: Array<{ id: string | null; label: string; time: string; available: boolean; remaining?: number }> = apiSlots
+    ? apiSlots.map((sl) => ({
+        id: sl.id,
+        label: `${periodLabel(sl.startTime)}: ${to12h(sl.startTime)} - ${to12h(sl.endTime)}`,
+        time: sl.label,
+        available: sl.available,
+        remaining: sl.remaining,
+      }))
+    : [
+        { id: null, label: 'صباحاً: 10:00 ص - 01:00 م', time: '10:00 - 13:00', available: true },
+        { id: null, label: 'ظهراً: 01:00 م - 04:00 م', time: '13:00 - 16:00', available: true },
+        { id: null, label: 'مساءً: 04:00 م - 07:00 م', time: '16:00 - 19:00', available: true },
+      ];
+
+  const slotSelectionValid = apiSlots ? !!selectedSlotId : !!selectedSlot;
 
   // Calculation
   const servicesTotal = useMemo(() => {
@@ -272,7 +342,7 @@ function BookContent() {
           name: customerName.trim(), phone: customerPhone.trim(),
           whatsappNumber: sameWhatsapp ? customerPhone.trim() : whatsappNumber.trim(),
           email: customerEmail.trim(), modelId: selectedModel.id, serviceIds: selectedServices,
-          areaId: selectedArea.id, slotDate: selectedDate, slotLabel: selectedSlot,
+          areaId: selectedArea.id, slotId: selectedSlotId || undefined, slotDate: selectedDate, slotLabel: selectedSlot,
           address: address.trim(), propertyType, notes: notes.trim() || undefined, termsAccepted,
         }),
       });
@@ -651,31 +721,51 @@ function BookContent() {
                   <label className="block text-xs font-bold text-slate-700 mb-2">
                     اختر الفترة الزمنية المناسبة لك
                   </label>
-                  <div className="space-y-2">
-                    {timeSlots.map((ts) => (
-                      <label
-                        key={ts.time}
-                        className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-colors ${
-                          selectedSlot === ts.time
-                            ? 'border-emerald-600 bg-emerald-50/50'
-                            : 'border-slate-200 bg-white'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="radio"
-                            name="slot"
-                            checked={selectedSlot === ts.time}
-                            onChange={() => setSelectedSlot(ts.time)}
-                            className="text-emerald-600"
-                          />
-                          <span className="text-xs font-bold text-slate-800">{ts.label}</span>
-                        </div>
-                        <span className="text-[10px] text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full font-semibold">
-                          متاح
-                        </span>
-                      </label>
-                    ))}
+                  <div className={`space-y-2 ${slotsLoading ? 'opacity-50 pointer-events-none' : ''}`}>
+                    {timeSlots.map((ts) => {
+                      const isSelected = ts.id ? selectedSlotId === ts.id : !apiSlots && selectedSlot === ts.time;
+                      return (
+                        <label
+                          key={ts.id || ts.time}
+                          className={`flex items-center justify-between p-3 rounded-xl border transition-colors ${
+                            !ts.available
+                              ? 'border-slate-200 bg-slate-50 opacity-60 cursor-not-allowed'
+                              : isSelected
+                                ? 'border-emerald-600 bg-emerald-50/50 cursor-pointer'
+                                : 'border-slate-200 bg-white cursor-pointer'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="radio"
+                              name="slot"
+                              disabled={!ts.available}
+                              checked={isSelected}
+                              onChange={() => {
+                                setSelectedSlot(ts.time);
+                                setSelectedSlotId(ts.id);
+                              }}
+                              className="text-emerald-600"
+                            />
+                            <span className="text-xs font-bold text-slate-800">{ts.label}</span>
+                          </div>
+                          {ts.available ? (
+                            <span className="text-[10px] text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full font-semibold">
+                              {ts.remaining === 1 ? 'آخر مكان متاح' : 'متاح'}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-slate-500 bg-slate-200 px-2 py-0.5 rounded-full font-semibold">
+                              غير متاح
+                            </span>
+                          )}
+                        </label>
+                      );
+                    })}
+                    {apiSlots && !apiSlots.some((sl) => sl.available) && (
+                      <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-3">
+                        لا توجد مواعيد متاحة في هذا اليوم، يرجى اختيار يوم آخر.
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -688,7 +778,7 @@ function BookContent() {
                     <span>الرجوع للخدمات</span>
                   </button>
                   <button
-                    disabled={!address}
+                    disabled={!address || !slotSelectionValid || slotsLoading}
                     onClick={() => setStep(4)}
                     className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl flex items-center gap-2 shadow-sm"
                   >
