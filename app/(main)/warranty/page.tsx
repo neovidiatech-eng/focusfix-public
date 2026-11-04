@@ -1,111 +1,92 @@
-"use client";
+import type { Metadata } from "next";
+import { Smartphone, BatteryCharging, Camera, ShieldCheck, XCircle, Check } from "lucide-react";
+import { PageHero, Container, SectionHeader } from "@/src/components/ui/Section";
+import { Reveal } from "@/src/components/ui/Reveal";
+import { Photo } from "@/src/components/ui/Photo";
+import { ButtonLink } from "@/src/components/ui/Button";
+import { WhatsAppIcon } from "@/src/components/site/WhatsAppIcon";
+import { PHOTOS } from "@/src/lib/images";
+import { getSiteSettings, whatsappHref } from "@/src/shared/utils/settings";
+import { SITE_URL } from "@/src/shared/utils/site";
 
-import React from "react";
-import { ShieldCheck, FileText, Phone } from "lucide-react";
-import { InnerHero } from "@/src/shared/components/ui/InnerHero";
-import { useTranslation } from "react-i18next";
+export const metadata: Metadata = {
+  title: "ضمان FocusFix على صيانة الآيفون | لحد سنة كاملة",
+  description: "ضمان مكتوب على كل إصلاح: سنة على الشاشات، 6 شهور على البطاريات، و3 شهور على المنافذ والكاميرات. اعرف الضمان بيغطي إيه وتطلبه إزاي.",
+  alternates: { canonical: `${SITE_URL}/warranty` },
+};
 
-export default function WarrantyPage() {
-  const { t } = useTranslation();
+const PLANS = [
+  { icon: Smartphone, period: "12 شهر", title: "الشاشات الأصلية", desc: "اللمس، السطوع، البكسلات، ثبات الألوان، ونقل True Tone." },
+  { icon: BatteryCharging, period: "6 شهور", title: "البطاريات", desc: "الفصل المفاجئ، الاستهلاك غير الطبيعي، أو نزول صحة البطارية بدون استخدام يبرر ده." },
+  { icon: Camera, period: "3 شهور", title: "المنافذ والكاميرات", desc: "مدخل الشحن، الكاميرا الأمامية والخلفية، المايك والسماعات الداخلية." },
+];
 
-  const warrantyFeatures = [
-    {
-      title: t("warrantyPage.screensTitle"),
-      description: t("warrantyPage.screensDesc"),
-      period: t("warrantyPage.screensPeriod"),
-      badge: "iPhone",
-    },
-    {
-      title: t("warrantyPage.batteriesTitle"),
-      description: t("warrantyPage.batteriesDesc"),
-      period: t("warrantyPage.batteriesPeriod"),
-      badge: "Battery",
-    },
-    {
-      title: t("warrantyPage.portsTitle"),
-      description: t("warrantyPage.portsDesc"),
-      period: t("warrantyPage.portsPeriod"),
-      badge: "Parts",
-    },
-  ];
-
+export default async function WarrantyPage() {
+  const settings = await getSiteSettings();
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
-      {/* Sleek Inner Hero */}
-      <InnerHero
-        breadcrumb={[
-          { label: t("nav.home"), href: "/" },
-          { label: t("warrantyPage.title") },
-        ]}
-        badge={t("warrantyPage.badge")}
-        badgeIcon={<ShieldCheck className="w-4 h-4 text-emerald-600" />}
-        title={t("warrantyPage.title")}
-        highlightedTitle={t("warrantyPage.highlight")}
-        description={t("warrantyPage.desc")}
+    <>
+      <PageHero
+        crumbs={[{ label: "الرئيسية", href: "/" }, { label: "الضمان" }]}
+        eyebrow="ضمان مكتوب"
+        title={<>لو حصلت مشكلة، <span className="text-brand-500">بنرجعلك ببلاش</span></>}
+        desc="بنثق في القطع اللي بنركبها، عشان كده كل إصلاح بيطلع بضمان مكتوب باسمك ورقم حجزك."
       />
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-20">
-        {/* Warranty Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          {warrantyFeatures.map((item, idx) => (
-            <div
-              key={idx}
-              className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-xs font-bold px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200">
-                    {item.badge}
-                  </span>
-                  <span className="text-xs font-black text-brand-600 bg-brand-50 px-2.5 py-1 rounded-lg">
-                    {item.period}
-                  </span>
-                </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2 leading-snug">
-                  {item.title}
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  {item.description}
-                </p>
-              </div>
-            </div>
+      <Container className="py-14 sm:py-20">
+        <div className="grid gap-4 md:grid-cols-3">
+          {PLANS.map((p, i) => (
+            <Reveal key={p.title} delay={i * 0.08} className="rounded-[1.75rem] bg-white p-7 shadow-soft ring-1 ring-ink/5">
+              <p.icon className="h-8 w-8 text-brand-500" />
+              <p className="num mt-6 font-display text-4xl font-bold">{p.period}</p>
+              <h2 className="mt-1 text-lg font-semibold">ضمان {p.title}</h2>
+              <p className="mt-3 leading-relaxed text-ink-2">{p.desc}</p>
+            </Reveal>
           ))}
         </div>
+      </Container>
 
-        {/* Detailed Terms Card */}
-        <div className="bg-white p-8 sm:p-12 rounded-3xl border border-slate-200 shadow-xs space-y-8 text-slate-700">
+      <section className="bg-white py-14 sm:py-20">
+        <Container className="grid gap-10 lg:grid-cols-2">
+          <Reveal className="rounded-[1.75rem] bg-paper p-7">
+            <h2 className="flex items-center gap-2 font-display text-xl font-semibold"><ShieldCheck className="h-6 w-6 text-[#12a150]" />الضمان بيغطي</h2>
+            <ul className="mt-5 space-y-3 text-ink-2">
+              {["عيوب القطعة نفسها", "أي مشكلة سببها التركيب", "زيارة الفني لفحص المشكلة", "تغيير القطعة لو طلع فيها عيب"].map((x) => (
+                <li key={x} className="flex gap-2"><Check className="mt-1 h-4 w-4 shrink-0 text-[#12a150]" />{x}</li>
+              ))}
+            </ul>
+          </Reveal>
+          <Reveal delay={0.08} className="rounded-[1.75rem] bg-paper p-7">
+            <h2 className="flex items-center gap-2 font-display text-xl font-semibold"><XCircle className="h-6 w-6 text-red-500" />الضمان ما بيغطيش</h2>
+            <ul className="mt-5 space-y-3 text-ink-2">
+              {["الكسر أو الخبط بعد الإصلاح", "دخول مياه أو سوائل", "فتح الجهاز عند حد تاني بعدنا", "أعطال تانية ملهاش علاقة بالإصلاح"].map((x) => (
+                <li key={x} className="flex gap-2"><XCircle className="mt-1 h-4 w-4 shrink-0 text-ink-3" />{x}</li>
+              ))}
+            </ul>
+          </Reveal>
+        </Container>
+      </section>
+
+      <Container className="py-14 sm:py-20">
+        <div className="grid items-center gap-10 lg:grid-cols-2">
+          <Reveal>
+            <Photo src={PHOTOS.openedPhone} alt="فحص آيفون تحت الضمان" aspect={4 / 3} className="aspect-[4/3] w-full rounded-[1.75rem]" />
+          </Reveal>
           <div>
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900 mb-3 flex items-center gap-2">
-              <FileText className="w-6 h-6 text-brand-600" />
-              <span>{t("warrantyPage.title")}</span>
-            </h2>
-            <p className="text-sm sm:text-base leading-relaxed text-slate-600">
-              {t("warrantyPage.desc")}
-            </p>
-          </div>
-
-          {/* Claim Callout */}
-          <div className="p-6 sm:p-8 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-brand-50 to-emerald-500/10 border border-emerald-500/20 flex flex-col sm:flex-row items-center justify-between gap-6">
-            <div>
-              <h3 className="text-base font-bold text-slate-900 mb-1">
-                {t("warrantyPage.claimTitle")}
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-600">
-                {t("warrantyPage.claimDesc")}
-              </p>
-            </div>
-            <a
-              href="https://wa.me/201009911934"
-              target="_blank"
-              rel="noreferrer"
-              className="shrink-0 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-xl transition-all flex items-center gap-2 text-xs shadow-md"
-            >
-              <Phone className="w-4 h-4" />
-              <span>{t("warrantyPage.claimBtn")}</span>
-            </a>
+            <SectionHeader eyebrow="طلب الضمان" title="تطلب الضمان إزاي؟" className="mb-6" />
+            <ol className="space-y-4">
+              {["ابعتلنا واتساب برقم الحجز أو رقم موبايلك.", "قولنا المشكلة، ولو تقدر ابعت صورة أو فيديو.", "الفني بيزورك يفحص ويصلح العيب مجاناً."].map((x, i) => (
+                <li key={x} className="flex gap-4">
+                  <span className="num grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-500 font-bold text-white">{i + 1}</span>
+                  <span className="pt-1.5 text-lg text-ink-2">{x}</span>
+                </li>
+              ))}
+            </ol>
+            <ButtonLink href={whatsappHref(settings.whatsapp, "أهلاً، عايز أطلب ضمان على إصلاح. رقم الحجز: ")} variant="whatsapp" size="lg" className="mt-8">
+              <WhatsAppIcon className="h-5 w-5" /> اطلب الضمان واتساب
+            </ButtonLink>
           </div>
         </div>
-      </div>
-    </div>
+      </Container>
+    </>
   );
 }

@@ -1,188 +1,173 @@
-'use client';
+"use client";
 
-import React, { Suspense, useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import {
-  CheckCircle,
-  MessageCircle,
-  Calendar,
-  Phone,
-  Home,
-  Clock,
-  ShieldCheck,
-  ChevronRight,
-  Download,
-} from 'lucide-react';
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { motion } from "motion/react";
+import { Check, CalendarPlus, Search, Phone, Wrench, Home } from "lucide-react";
+import { Container } from "@/src/components/ui/Section";
+import { ButtonLink } from "@/src/components/ui/Button";
+import { WhatsAppIcon } from "@/src/components/site/WhatsAppIcon";
+import { whatsappHref } from "@/src/shared/utils/settings";
+import { useSiteSettings } from "@/src/providers/SiteSettingsProvider";
+import { arabicDate, egp, to12h } from "@/src/lib/format";
+import { API_BASE_URL } from "@/src/shared/utils/site";
 
-function BookingSuccessContent() {
-  const searchParams = useSearchParams();
-  const bookingNumber = searchParams.get('bookingNumber') || 'FM-2026-00351';
+interface Order {
+  bookingNumber: string;
+  device?: string;
+  services?: string[];
+  area?: string;
+  slotDate?: string;
+  slotTime?: string;
+  address?: string;
+  total?: number;
+}
 
-  const [orderData, setOrderData] = useState<any>(null);
+function SuccessContent() {
+  const settings = useSiteSettings();
+  const params = useSearchParams();
+  const token = params.get("token");
+  const number = params.get("bookingNumber") || "";
+  const [order, setOrder] = useState<Order | null>(null);
 
   useEffect(() => {
-    const saved = sessionStorage.getItem('focusfix_last_booking');
-    if (saved) {
-      try {
-        setOrderData(JSON.parse(saved));
-      } catch (e) {}
+    try {
+      const saved = JSON.parse(sessionStorage.getItem("focusfix_last_booking") || "null");
+      if (saved && (!number || saved.bookingNumber === number)) return setOrder(saved);
+    } catch {
+      // corrupted storage — fall through to the API
     }
-  }, []);
+    // Opened on another device: load the booking by its confirmation token
+    if (!token) return;
+    fetch(`${API_BASE_URL}/bookings/confirmation/${encodeURIComponent(token)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((b) => {
+        if (!b) return;
+        setOrder({
+          bookingNumber: b.bookingNumber,
+          device: b.device,
+          area: b.area,
+          slotDate: String(b.slotDate).slice(0, 10),
+          slotTime: b.slotLabel,
+          total: Number(b.estimatedTotal),
+          services: (b.services || []).map((x: { name: string }) => x.name),
+        });
+      })
+      .catch(() => {});
+  }, [number, token]);
 
-  const handleDownloadICS = () => {
-    const icsContent = `BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//FocusFix//Appointment//EN
-BEGIN:VEVENT
-SUMMARY:موعد صيانة أبل FocusFix (${bookingNumber})
-DESCRIPTION:زيارة فني FocusFix لصيانة الجهاز مع ضمان معتمد.
-LOCATION:القاهرة والجيزة
-STATUS:CONFIRMED
-END:VEVENT
-END:VCALENDAR`;
+  const bookingNumber = order?.bookingNumber || number;
+  const [start = "", end = ""] = String(order?.slotTime || "").match(/\d{2}:\d{2}/g) || [];
 
-    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-    const link = document.createElement('a');
-    link.href = window.URL.createObjectURL(blob);
-    link.setAttribute('download', `${bookingNumber}.ics`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const downloadIcs = () => {
+    const day = String(order?.slotDate || "").replace(/-/g, "");
+    const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+    const ics = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//FocusFix//Appointment//AR",
+      "BEGIN:VEVENT",
+      `UID:${bookingNumber}@focusfix.net`,
+      `DTSTAMP:${stamp}`,
+      day && start ? `DTSTART;TZID=Africa/Cairo:${day}T${start.replace(":", "")}00` : "",
+      day && end ? `DTEND;TZID=Africa/Cairo:${day}T${end.replace(":", "")}00` : "",
+      `SUMMARY:زيارة فني FocusFix (${bookingNumber})`,
+      `DESCRIPTION:صيانة ${order?.device || "جهازك"}`,
+      `LOCATION:${order?.address || order?.area || ""}`,
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].filter(Boolean).join("\r\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([ics], { type: "text/calendar;charset=utf-8" }));
+    a.download = `${bookingNumber}.ics`;
+    a.click();
+    URL.revokeObjectURL(a.href);
   };
 
-  const whatsappMessage = encodeURIComponent(
-    `مرحباً FocusFix، قمت بعمل حجز صيانة برقم ${bookingNumber} وأريد متابعة الموعد.`
-  );
-
   return (
-    <div className="min-h-screen bg-slate-50 pt-28 pb-20 px-4">
-      <div className="max-w-2xl mx-auto space-y-6">
-        {/* Success Card */}
-        <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm text-center">
-          <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="w-10 h-10" />
-          </div>
-
-          <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">
-            تم استلام طلبك بنجاح
-          </span>
-
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 mt-3">
-            شكراً لثقتك في FocusFix!
-          </h1>
-          <p className="text-slate-500 text-xs sm:text-sm mt-1">
-            تم تسجيل حجز الصيانة وسيقوم منسق العمليات بتأكيد الموعد معك هاتفياً
-          </p>
-
-          {/* Booking Code Banner */}
-          <div className="my-6 p-4 bg-slate-50 border border-dashed border-slate-300 rounded-2xl max-w-sm mx-auto">
-            <span className="text-[11px] font-bold text-slate-400 block mb-1">رقم الحجز المرجعي</span>
-            <span className="font-mono text-2xl font-black text-slate-900 tracking-wider">
-              {bookingNumber}
-            </span>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <a
-              href={`https://wa.me/201009911934?text=${whatsappMessage}`}
-              target="_blank"
-              rel="noreferrer"
-              className="w-full sm:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2"
-            >
-              <MessageCircle className="w-4 h-4" />
-              <span>متابعة الحجز عبر الواتساب</span>
-            </a>
-
-            <button
-              onClick={handleDownloadICS}
-              className="w-full sm:w-auto px-5 py-3 border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-bold flex items-center justify-center gap-2"
-            >
-              <Calendar className="w-4 h-4 text-slate-500" />
-              <span>إضافة الموعد للتقويم (.ics)</span>
-            </button>
+    <div className="grain min-h-screen pt-28 pb-32 sm:pt-36">
+      <Container className="max-w-2xl">
+        <div className="text-center">
+          <motion.div
+            initial={{ scale: 0.6, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 260, damping: 18 }}
+            className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-[#12a150] text-white shadow-[0_12px_30px_-10px_rgb(18_161_80/0.7)]"
+          >
+            <Check className="h-10 w-10" strokeWidth={3} />
+          </motion.div>
+          <h1 className="mt-6 text-3xl font-bold sm:text-4xl">حجزك وصلنا!</h1>
+          <p className="mt-3 text-lg text-ink-2">هنكلمك قريب عشان نأكد الميعاد. احتفظ برقم الحجز عشان تتابعه.</p>
+          <div className="mx-auto mt-6 inline-flex flex-col items-center rounded-2xl border-2 border-dashed border-brand-200 bg-white px-8 py-4">
+            <span className="text-xs text-ink-3">رقم الحجز</span>
+            <span className="num mt-1 font-display text-2xl font-bold tracking-wider" dir="ltr">{bookingNumber}</span>
           </div>
         </div>
 
-        {/* What Happens Next */}
-        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
-          <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-            <Clock className="w-4 h-4 text-emerald-600" />
-            <span>ما الذي سيحدث بعد ذلك؟</span>
-          </h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-            <div className="p-4 bg-slate-50 rounded-xl space-y-1.5 border border-slate-100">
-              <span className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-[11px]">
-                1
-              </span>
-              <h3 className="font-bold text-slate-900">مكالمة التأكيد</h3>
-              <p className="text-slate-500 leading-relaxed">
-                سيتواصل معك فريق الدعم خلال دقائق لتأكيد الموعد والعنوان بدقة.
-              </p>
-            </div>
-
-            <div className="p-4 bg-slate-50 rounded-xl space-y-1.5 border border-slate-100">
-              <span className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-[11px]">
-                2
-              </span>
-              <h3 className="font-bold text-slate-900">حضور الفني</h3>
-              <p className="text-slate-500 leading-relaxed">
-                يصل الفني المتخصص إلى باب منزلك أو مكتبك ومعه قطع الغيار الأصلية.
-              </p>
-            </div>
-
-            <div className="p-4 bg-slate-50 rounded-xl space-y-1.5 border border-slate-100">
-              <span className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-[11px]">
-                3
-              </span>
-              <h3 className="font-bold text-slate-900">إصلاح وضمان</h3>
-              <p className="text-slate-500 leading-relaxed">
-                يتم الإصلاح أمام عينيك في أقل من 30 دقيقة مع تسليم شهادة الضمان.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Order Details Summary if found */}
-        {orderData && (
-          <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-3 text-xs">
-            <h3 className="font-bold text-slate-900 text-sm">تفاصيل الطلب:</h3>
-            <div className="grid grid-cols-2 gap-2 text-slate-600">
-              <div>الجهاز: <strong className="text-slate-900">{orderData.device}</strong></div>
-              <div>المنطقة: <strong className="text-slate-900">{orderData.area}</strong></div>
-              <div>الموعد: <strong className="text-slate-900">{orderData.slotDate} ({orderData.slotTime})</strong></div>
-              <div>الإجمالي: <strong className="text-emerald-600">{orderData.total} ج.م</strong></div>
-            </div>
+        {order && (
+          <div className="mt-8 rounded-[1.75rem] bg-white p-6 shadow-soft ring-1 ring-ink/5">
+            <dl className="divide-y divide-line text-[15px]">
+              {order.device && <Item k="الجهاز" v={<span dir="ltr">{order.device}</span>} />}
+              {order.services?.length ? <Item k="الخدمة" v={order.services.join("، ")} /> : null}
+              {order.slotDate && <Item k="اليوم" v={arabicDate(order.slotDate, { weekday: "long", day: "numeric", month: "long" })} />}
+              {start && <Item k="الفترة" v={<span className="num">{to12h(start)} – {to12h(end)}</span>} />}
+              {order.area && <Item k="المنطقة" v={order.area} />}
+              {order.total !== undefined && <Item k="الإجمالي التقديري" v={<b className="num">{egp(order.total)}</b>} />}
+            </dl>
           </div>
         )}
 
-        <div className="text-center">
-          <Link
-            href="/"
-            className="text-xs text-slate-500 hover:text-slate-800 font-bold inline-flex items-center gap-1"
-          >
-            <Home className="w-3.5 h-3.5" />
-            <span>العودة إلى الصفحة الرئيسية</span>
-          </Link>
+        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+          <ButtonLink href={whatsappHref(settings.whatsapp, `أهلاً FocusFix، عملت حجز رقم ${bookingNumber}`)} variant="whatsapp" size="lg">
+            <WhatsAppIcon className="h-5 w-5" /> تابع معانا واتساب
+          </ButtonLink>
+          <button onClick={downloadIcs} className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-white font-semibold ring-1 ring-line hover:ring-ink/20">
+            <CalendarPlus className="h-5 w-5" /> ضيف الميعاد للتقويم
+          </button>
         </div>
-      </div>
+
+        <div className="mt-10 rounded-[1.75rem] bg-ink p-6 text-white sm:p-8">
+          <h2 className="font-display text-xl font-semibold">اللي جاي</h2>
+          <ol className="mt-5 space-y-5">
+            {[
+              { icon: Phone, t: "هنكلمك نأكد", d: "خلال ساعات العمل هنتصل بيك نأكد الميعاد والعنوان." },
+              { icon: Wrench, t: "الفني يوصلك", d: "بيكلمك قبل ما يوصل، ويصلح جهازك قدامك." },
+              { icon: Check, t: "جرّب وادفع", d: "بعد ما تتأكد إن كل حاجة تمام، بتدفع وتستلم الضمان." },
+            ].map(({ icon: Icon, t, d }) => (
+              <li key={t} className="flex gap-4">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/10"><Icon className="h-5 w-5" /></span>
+                <div>
+                  <p className="font-semibold">{t}</p>
+                  <p className="text-white/70">{d}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        <div className="mt-8 flex flex-wrap justify-center gap-6 text-sm font-semibold text-brand-600">
+          <Link href="/track" className="inline-flex items-center gap-1.5 hover:underline"><Search className="h-4 w-4" />تتبع حجزك</Link>
+          <Link href="/" className="inline-flex items-center gap-1.5 hover:underline"><Home className="h-4 w-4" />الرئيسية</Link>
+        </div>
+      </Container>
+    </div>
+  );
+}
+
+function Item({ k, v }: { k: string; v: React.ReactNode }) {
+  return (
+    <div className="flex items-start justify-between gap-4 py-3">
+      <dt className="text-ink-3">{k}</dt>
+      <dd className="text-end font-medium">{v}</dd>
     </div>
   );
 }
 
 export default function BookingSuccessPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen bg-slate-50 pt-28 pb-20 text-center text-slate-400">
-          جاري التحميل...
-        </div>
-      }
-    >
-      <BookingSuccessContent />
+    <Suspense fallback={<div className="min-h-screen" />}>
+      <SuccessContent />
     </Suspense>
   );
 }
-

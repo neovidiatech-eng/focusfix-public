@@ -1,10 +1,31 @@
 import type { Metadata } from "next";
+import type { Viewport } from "next";
+import { IBM_Plex_Sans_Arabic, Readex_Pro } from "next/font/google";
 import "./globals.css";
-import { I18nProvider } from "@/src/providers/I18nProvider";
-import { AntdRegistry } from "@ant-design/nextjs-registry";
 import Script from "next/script";
-import { QueryProvider } from "@/src/providers/QueryProvider";
 import { SITE_URL } from "@/src/shared/utils/site";
+import { getSiteSettings } from "@/src/shared/utils/settings";
+import { SiteSettingsProvider } from "@/src/providers/SiteSettingsProvider";
+
+const body = IBM_Plex_Sans_Arabic({
+  subsets: ["arabic", "latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-body",
+  display: "swap",
+});
+
+const display = Readex_Pro({
+  subsets: ["arabic", "latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-display-face",
+  display: "swap",
+});
+
+export const viewport: Viewport = {
+  themeColor: "#f6f4ef",
+  width: "device-width",
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -67,13 +88,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const settings = await getSiteSettings();
   return (
-    <html lang="ar" dir="rtl">
+    <html lang="ar" dir="rtl" className={`${body.variable} ${display.variable}`}>
       <head>
         {/* Google Tag Manager */}
         <Script id="gtm-script" strategy="afterInteractive">
@@ -96,8 +118,8 @@ export default function RootLayout({
               description:
                 "أسرع خدمة صيانة آيفون في مصر - بنجيلك مكانك ونصلح موبايلك في 30 دقيقة",
               url: SITE_URL,
-              telephone: "+201009911934",
-              email: "support@focusfix.net",
+              telephone: settings.phone,
+              email: settings.supportEmail,
               image: `${SITE_URL}/logo1.jpeg`,
               address: {
                 "@type": "PostalAddress",
@@ -121,8 +143,8 @@ export default function RootLayout({
                   "Saturday",
                   "Sunday",
                 ],
-                opens: "09:00",
-                closes: "22:00",
+                opens: settings.working_hours_start,
+                closes: settings.working_hours_end,
               },
               hasOfferCatalog: {
                 "@type": "OfferCatalog",
@@ -186,11 +208,7 @@ export default function RootLayout({
           />
         </noscript>
 
-        <AntdRegistry>
-          <QueryProvider>
-            <I18nProvider>{children}</I18nProvider>
-          </QueryProvider>
-        </AntdRegistry>
+        <SiteSettingsProvider settings={settings}>{children}</SiteSettingsProvider>
       </body>
     </html>
   );

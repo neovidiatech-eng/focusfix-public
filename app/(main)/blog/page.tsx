@@ -1,241 +1,73 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import Link from "next/link";
-import { BookOpen, Calendar, Clock, ArrowRight, Sparkles } from "lucide-react";
-import { InnerHero } from "@/src/shared/components/ui/InnerHero";
+import { ArrowLeft, Clock } from "lucide-react";
+import { PageHero, Container } from "@/src/components/ui/Section";
+import { Reveal } from "@/src/components/ui/Reveal";
+import { Photo } from "@/src/components/ui/Photo";
+import { listPosts, type PostCard } from "@/src/lib/blog";
+import { arabicDate } from "@/src/lib/format";
+import { SITE_URL } from "@/src/shared/utils/site";
 
 export const metadata: Metadata = {
-  title: "مدونة صيانة أبل ودليل العناية بالأجهزة | FocusFix",
-  description:
-    "مقالات ودلائل إرشادية حول صيانة أجهزة آيفون، تغيير البطاريات والشاشات، الحفاظ على عمر البطارية، وحلول مشاكل أبل الشائعة.",
-  alternates: {
-    canonical: "https://focusfix.net/blog",
-  },
+  title: "مدونة FocusFix — نصايح صيانة وعناية بالآيفون",
+  description: "مقالات عن صيانة الآيفون: إمتى تغير البطارية، الفرق بين الشاشة الأصلية والتقليد، وتعمل إيه لو الموبايل وقع في المية.",
+  alternates: { canonical: `${SITE_URL}/blog` },
 };
 
-interface BlogPostItem {
-  slug: string;
-  title: string;
-  excerpt: string;
-  category: string;
-  readTime: string;
-  publishedAt: string;
-  coverImage: string;
+function Meta({ post }: { post: PostCard }) {
+  return (
+    <span className="flex items-center gap-3 text-[13px] text-ink-3">
+      <span className="font-semibold text-brand-600">{post.category}</span>
+      <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{post.readMinutes} دقايق</span>
+      {post.publishedAt && <span className="num">{arabicDate(post.publishedAt, { day: "numeric", month: "short", year: "numeric" })}</span>}
+    </span>
+  );
 }
 
-const DEFAULT_BLOG_POSTS: BlogPostItem[] = [
-  {
-    slug: "when-to-replace-iphone-battery",
-    title: "متى يجب عليك تغيير بطارية الآيفون؟ علامات وحلول نصائح الخبراء",
-    excerpt:
-      "هل لاحظت هبوط نسبة صحة البطارية أسفل 80%؟ تعرف على العلامات الحقيقية لتلف البطارية وكيف يؤثر ذلك على أداء جهازك، ومتى يكون التبديل آمناً.",
-    category: "بطاريات أبل",
-    readTime: "4 دقائق",
-    publishedAt: "2026-03-15",
-    coverImage: "/image1.jpeg",
-  },
-  {
-    slug: "original-vs-copy-iphone-screen",
-    title: "الفرق بين شاشة الآيفون الأصلية والتقليد: دليلك الكامل قبل الصيانة",
-    excerpt:
-      "تتعرف على الفروقات الجوهرية في ألوان الـ OLED ومعدل التحديث 120Hz، ودعم ميزة True Tone لضمان عدم تعرضك للغش في مراكز الصيانة غير المعتمدة.",
-    category: "شاشات الآيفون",
-    readTime: "6 دقائق",
-    publishedAt: "2026-03-20",
-    coverImage: "/image2.jpeg",
-  },
-  {
-    slug: "what-to-do-when-iphone-drops-in-water",
-    title: "ماذا تفعل عند سقوط الآيفون في الماء؟ 5 خطوات فورية لإنقاذه",
-    excerpt:
-      "تجنب خطأ وضع الهاتف في الأرز! إليك الخطوات الصحيحة والمثبتة علمياً لإيقاف تشغيل الجهاز وتجفيفه ومنع حدوث التماس كهربائي في اللوحة الأم.",
-    category: "أعطال وحلول",
-    readTime: "5 دقائق",
-    publishedAt: "2026-03-25",
-    coverImage: "/image3.jpeg",
-  },
-  {
-    slug: "doorstep-repair-privacy-and-data-safety",
-    title: "لماذا تعد الصيانة المنزلية أمام عينك أكثر أماناً لخصوصية صورك وبياناتك؟",
-    excerpt:
-      "لماذا تخاطر بترك هاتفك لعدة أيام في متجر صيانة؟ خدمة الصيانة المنزلية تمنحك الأمان التام حيث تتم معالجة الجهاز أمامك مباشرة بدون طلب كلمة المرور.",
-    category: "خدمات FocusFix",
-    readTime: "3 دقائق",
-    publishedAt: "2026-03-28",
-    coverImage: "/image4.jpeg",
-  },
-];
-
-interface LivePostsResult {
-  posts: BlogPostItem[];
-  fromApi: boolean;
-}
-
-async function getLivePosts(): Promise<LivePostsResult> {
-  const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
-  try {
-    const res = await fetch(`${apiBase}/blog/posts?limit=30`, {
-      next: { revalidate: 30, tags: ['blog'] },
-    });
-    if (res.ok) {
-      const json = await res.json();
-      if (Array.isArray(json.data)) {
-        return {
-          fromApi: true,
-          posts: json.data.map((p: Record<string, unknown>) => ({
-            slug: p.slug as string,
-            title: (p.title_ar || p.title_en) as string,
-            excerpt: (p.excerpt_ar || p.excerpt_en || '') as string,
-            category: ((p.category as Record<string, string>)?.name_ar) || 'مقالات عامة',
-            readTime: `${(p.reading_minutes as number) || 4} دقائق`,
-            publishedAt: p.published_at
-              ? new Date(p.published_at as string).toISOString().slice(0, 10)
-              : '',
-            coverImage: (p.featured_image as string) || '/image1.jpeg',
-          })),
-        };
-      }
-    }
-  } catch (e) {
-    console.error('Failed to load live blog posts:', e);
-  }
-  // Only use DEFAULT_BLOG_POSTS when the API is completely unreachable
-  return { fromApi: false, posts: DEFAULT_BLOG_POSTS };
-}
-
-export default async function BlogIndexPage() {
-  const { posts: blogPosts } = await getLivePosts();
+export default async function BlogPage() {
+  const posts = await listPosts();
+  const [featured, ...rest] = posts;
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20">
-      <InnerHero
-        breadcrumb={[
-          { label: "الرئيسية", href: "/" },
-          { label: "المدونة والدليل التقني" },
-        ]}
-        badge="مدونة وتقنيات FocusFix"
-        badgeIcon={<BookOpen className="w-4 h-4 text-brand-600" />}
-        title="دليلك التقني الشامل"
-        highlightedTitle="لأجهزة أبل"
-        description="نصائح عملية من مهندسي صيانة FocusFix المعتمدين حول الحفاظ على جهازك، حل المشاكل الشائعة، واختيار قطع الغيار المضمونة."
-      />
-
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-20">
-
-        {/* Empty State */}
-        {blogPosts.length === 0 && (
-          <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center my-8 shadow-xs">
-            <BookOpen className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-slate-800 mb-2">لا توجد مقالات منشورة حالياً</h3>
-            <p className="text-sm text-slate-500 max-w-md mx-auto">
-              نقوم حالياً بإعداد مقالات ودلائل تقنية جديدة ومفيدة لأجهزة أبل. تابعنا قريباً!
-            </p>
-          </div>
-        )}
-
-        {/* Featured Post (First one) */}
-        {blogPosts.length > 0 && (
-          <Link
-            href={`/blog/${blogPosts[0].slug}`}
-            className="group block bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-lg transition-all duration-300 mb-12"
-          >
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-              <div className="lg:col-span-7 p-8 sm:p-10">
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="text-xs font-bold px-3 py-1 bg-brand-100/10 text-brand-700 rounded-full border border-brand-200">
-                    {blogPosts[0].category}
-                  </span>
-                  <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                    <Clock className="w-3.5 h-3.5" />
-                    <span>{blogPosts[0].readTime}</span>
-                  </div>
+    <>
+      <PageHero crumbs={[{ label: "الرئيسية", href: "/" }, { label: "المدونة" }]} eyebrow="المدونة" title="نصايح تخلّي جهازك يعيش أطول" desc="من فنيين FocusFix: إزاي تحافظ على البطارية، تعرف الشاشة الأصلية، وتتصرف صح لو حصل عطل." />
+      <Container className="py-14 sm:py-20">
+        {!featured ? (
+          <p className="rounded-2xl bg-white p-10 text-center text-ink-2">مفيش مقالات لسه. ارجعلنا قريب.</p>
+        ) : (
+          <>
+            <Reveal>
+              <Link href={`/blog/${featured.slug}`} className="group grid overflow-hidden rounded-[1.75rem] bg-white shadow-soft ring-1 ring-ink/5 lg:grid-cols-2">
+                <div className="overflow-hidden">
+                  <Photo src={featured.cover} alt={featured.title} aspect={16 / 10} priority className="aspect-[16/10] h-full w-full transition-transform duration-700 group-hover:scale-105" />
                 </div>
-
-                <h2 className="text-2xl sm:text-3xl font-black text-slate-900 group-hover:text-brand-600 transition-colors mb-3 leading-snug">
-                  {blogPosts[0].title}
-                </h2>
-
-                <p className="text-slate-600 text-sm sm:text-base leading-relaxed mb-6">
-                  {blogPosts[0].excerpt}
-                </p>
-
-                <div className="flex items-center gap-2 text-brand-600 font-bold text-sm">
-                  <span>قراءة المقال بالكامل</span>
-                  <ArrowRight className="w-4 h-4 rtl:rotate-180 group-hover:translate-x-[-3px] transition-transform" />
+                <div className="flex flex-col justify-center p-6 sm:p-10">
+                  <Meta post={featured} />
+                  <h2 className="mt-3 text-2xl font-bold leading-snug sm:text-3xl">{featured.title}</h2>
+                  <p className="mt-3 line-clamp-3 leading-relaxed text-ink-2">{featured.excerpt}</p>
+                  <span className="mt-6 inline-flex items-center gap-2 font-semibold text-brand-600">اقرا المقال <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" /></span>
                 </div>
-              </div>
-
-              <div className="lg:col-span-5 h-64 lg:h-full relative bg-slate-100 overflow-hidden">
-                <img
-                  src={blogPosts[0].coverImage}
-                  alt={blogPosts[0].title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-              </div>
+              </Link>
+            </Reveal>
+            <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {rest.map((p, i) => (
+                <Reveal key={p.slug} delay={(i % 3) * 0.06}>
+                  <Link href={`/blog/${p.slug}`} className="group block h-full overflow-hidden rounded-[1.5rem] bg-white shadow-soft ring-1 ring-ink/5">
+                    <div className="overflow-hidden">
+                      <Photo src={p.cover} alt={p.title} aspect={16 / 10} className="aspect-[16/10] w-full transition-transform duration-700 group-hover:scale-105" sizes="(max-width: 640px) 100vw, 33vw" />
+                    </div>
+                    <div className="p-5">
+                      <Meta post={p} />
+                      <h3 className="mt-2 text-lg font-semibold leading-snug">{p.title}</h3>
+                      <p className="mt-2 line-clamp-2 text-[15px] text-ink-2">{p.excerpt}</p>
+                    </div>
+                  </Link>
+                </Reveal>
+              ))}
             </div>
-          </Link>
+          </>
         )}
-
-        {/* Rest of posts */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {blogPosts.slice(1).map((post: BlogPostItem) => (
-            <Link
-              key={post.slug}
-              href={`/blog/${post.slug}`}
-              className="group flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-md hover:border-brand-200 transition-all"
-            >
-              <div className="h-48 w-full bg-slate-100 overflow-hidden relative">
-                <img
-                  src={post.coverImage}
-                  alt={post.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <span className="absolute top-3 right-3 text-xs font-bold px-2.5 py-1 bg-white/90 backdrop-blur-sm text-slate-800 rounded-lg shadow-xs">
-                  {post.category}
-                </span>
-              </div>
-
-              <div className="p-6 flex flex-col flex-1 justify-between">
-                <div>
-                  <div className="flex items-center gap-2 text-xs text-slate-400 mb-2">
-                    <Clock className="w-3.5 h-3.5" />
-                    <span>{post.readTime}</span>
-                  </div>
-
-                  <h3 className="font-bold text-slate-900 group-hover:text-brand-600 transition-colors line-clamp-2 mb-2 leading-snug">
-                    {post.title}
-                  </h3>
-
-                  <p className="text-xs text-slate-500 line-clamp-3 leading-relaxed mb-4">
-                    {post.excerpt}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-1.5 text-xs font-bold text-brand-600 pt-3 border-t border-slate-100">
-                  <span>اقرأ المزيد</span>
-                  <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-
-        {/* Newsletter / CTA */}
-        <div className="mt-16 bg-brand-50 border border-brand-200 rounded-3xl p-8 sm:p-12 text-center">
-          <Sparkles className="w-8 h-8 text-brand-600 mx-auto mb-3" />
-          <h3 className="text-2xl font-black text-slate-900 mb-2">
-            هل جهازك يعاني من مشكلة حالياً؟
-          </h3>
-          <p className="text-slate-600 text-sm max-w-lg mx-auto mb-6">
-            بدلاً من البحث والقلق، احجز فحصاً منزلياً فورياً مع فني متخصص يصلك لباب بيتك بضمان وقطع أصلية.
-          </p>
-          <Link
-            href="/book"
-            className="inline-block bg-brand-600 hover:bg-brand-500 text-white font-bold px-8 py-3 rounded-xl transition-all shadow-md hover:shadow-brand-600/20 text-sm"
-          >
-            احجز صيانة الآن
-          </Link>
-        </div>
-      </div>
-    </div>
+      </Container>
+    </>
   );
 }

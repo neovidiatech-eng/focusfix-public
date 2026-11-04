@@ -1,21 +1,19 @@
-"use client";
+import { Header } from "@/src/components/site/Header";
+import { Footer } from "@/src/components/site/Footer";
+import { MobileDock } from "@/src/components/site/MobileDock";
+import { AnnouncementBar } from "@/src/components/site/AnnouncementBar";
+import { getSiteSettings } from "@/src/shared/utils/settings";
 
-import React from "react";
-import { Navbar } from "@/src/features/landing/components/NavBar";
-import { Footer } from "@/src/features/landing/components/Footer";
-import { FloatingWhatsApp } from "@/src/features/landing/components/FloatingWhatsApp";
-
-export default function MainLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function MainLayout({ children }: { children: React.ReactNode }) {
+  const settings = await getSiteSettings();
+  const hasBanner = settings.banner_enabled === "true" && !!settings.banner_text;
   return (
-    <div className="font-sans antialiased bg-slate-50 text-slate-900 no-scrollbar relative">
-      <Navbar />
-      <main className="relative z-10">{children}</main>
-      <Footer />
-      <FloatingWhatsApp />
+    <div className="relative min-h-screen">
+      <AnnouncementBar settings={settings} />
+      <Header hasBanner={hasBanner} />
+      <main className={hasBanner ? "pt-9" : undefined}>{children}</main>
+      <Footer settings={settings} />
+      <MobileDock />
     </div>
   );
 }
