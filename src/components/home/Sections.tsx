@@ -41,7 +41,7 @@ export function ServicesGrid({ services, from }: { services: Service[]; from: Re
           {services.slice(0, 6).map((s, i) => (
             <Reveal key={s.id} delay={i * 0.06}>
               <Link href={`/book?service=${s.slug}`} className="group relative block overflow-hidden rounded-[1.5rem] bg-ink">
-                <Photo src={servicePhoto(s.slug)} alt={s.name_ar} aspect={4 / 3} className="aspect-[4/3] w-full opacity-80 transition-transform duration-700 group-hover:scale-105" sizes="(max-width: 640px) 100vw, 33vw" />
+                <Photo src={s.image_url || servicePhoto(s.slug)} alt={s.name_ar} aspect={4 / 3} className="aspect-[4/3] w-full opacity-80 transition-transform duration-700 group-hover:scale-105" sizes="(max-width: 640px) 100vw, 33vw" />
                 <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/30 to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 p-5 text-white">
                   <div className="flex items-center gap-3 text-xs text-white/70">

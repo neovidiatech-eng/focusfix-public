@@ -17,7 +17,8 @@ export function Photo({
   priority?: boolean;
   aspect?: number;
 }) {
-  const remote = !src.startsWith("/");
+  // Only Unsplash ids get a responsive srcset; uploaded files are already sized by the API
+  const remote = !src.startsWith("/") && !src.startsWith("http");
   const widths = [480, 800, 1200, 1600];
   const h = (w: number) => (aspect ? Math.round(w / aspect) : undefined);
   return (

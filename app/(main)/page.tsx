@@ -16,7 +16,7 @@ export default async function HomePage() {
   const modelNames = matrices.flatMap((m) => m.matrix.series.flatMap((s) => s.models.map((x) => x.name))).slice(0, 24);
 
   // A real price for the hero card, e.g. the newest model's screen
-  const firstModel = iphone?.series[0]?.models[0];
+  const firstModel = iphone?.series.flatMap((s) => s.models).find((m) => Object.values(m.cells).some((c) => cellPrice(c) !== null));
   const firstCol = iphone?.columns.find((c) => cellPrice(firstModel?.cells[c.slug]) !== null);
   const heroPrice = firstModel && firstCol ? { label: `${firstCol.name_ar} ${firstModel.name}`, price: egp(cellPrice(firstModel.cells[firstCol.slug])) } : undefined;
 

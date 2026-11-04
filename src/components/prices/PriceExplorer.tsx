@@ -7,6 +7,7 @@ import type { DeviceType, PriceMatrix, PriceCell } from "@/src/lib/api";
 import { cellPrice } from "@/src/lib/api";
 import { egp, warrantyLabel } from "@/src/lib/format";
 import { cn } from "@/src/shared/utils/utils";
+import { DeviceImage, kindOf } from "@/src/components/ui/DeviceImage";
 
 function PriceTag({ cell, compact }: { cell?: PriceCell; compact?: boolean }) {
   if (!cell || cell.status === "unavailable") return <span className="text-ink-3">—</span>;
@@ -98,7 +99,12 @@ export function PriceExplorer({ data }: { data: Array<{ type: DeviceType; matrix
                 <tbody className="divide-y divide-line">
                   {s.models.map((m) => (
                     <tr key={m.id} className="transition-colors hover:bg-brand-50/40">
-                      <td className="px-5 py-4 text-start font-semibold" dir="ltr">{m.name}</td>
+                      <td className="px-5 py-3 text-start font-semibold">
+                        <span className="flex items-center gap-3">
+                          <DeviceImage src={m.imageUrl} alt={m.name} kind={kindOf(current.type.slug)} className="h-11 w-11 shrink-0 rounded-lg bg-paper" />
+                          <span dir="ltr">{m.name}</span>
+                        </span>
+                      </td>
                       {cols.map((c) => (
                         <td key={c.slug} className="px-3 py-4"><PriceTag cell={m.cells[c.slug]} /></td>
                       ))}
@@ -118,7 +124,10 @@ export function PriceExplorer({ data }: { data: Array<{ type: DeviceType; matrix
               {s.models.map((m) => (
                 <article key={m.id} className="rounded-2xl bg-white p-4 shadow-soft ring-1 ring-ink/5">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-display text-lg font-semibold" dir="ltr">{m.name}</h3>
+                    <span className="flex items-center gap-3">
+                      <DeviceImage src={m.imageUrl} alt={m.name} kind={kindOf(current.type.slug)} className="h-12 w-12 shrink-0 rounded-xl bg-paper" />
+                      <h3 className="font-display text-lg font-semibold" dir="ltr">{m.name}</h3>
+                    </span>
                     <Link href={`/book?model=${m.id}`} className="inline-flex items-center gap-1 rounded-full bg-brand-500 px-3.5 py-1.5 text-sm font-semibold text-white">
                       احجز <ArrowLeft className="h-3.5 w-3.5" />
                     </Link>

@@ -11,7 +11,7 @@ import { WhatsAppIcon } from "./WhatsAppIcon";
 export async function Footer({ settings }: { settings: SiteSettings }) {
   const areas = (await getAreas()).slice(0, 10);
   return (
-    <footer className="bg-ink pb-28 text-white/70 md:pb-0">
+    <footer className="navy-surface pb-28 text-white/70 md:pb-0">
       <Container className="py-14 sm:py-20">
         <div className="grid gap-12 md:grid-cols-12">
           <div className="md:col-span-4">

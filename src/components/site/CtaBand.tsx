@@ -11,9 +11,9 @@ export function CtaBand({ settings, title = "جهازك يرجع زي الجدي
   return (
     <section className="py-16 sm:py-24">
       <Container>
-        <Reveal className="relative overflow-hidden rounded-[2rem] bg-brand-600 px-6 py-12 text-white sm:px-12 sm:py-16">
-          <Photo src={PHOTOS.repairMat} alt="" className="absolute inset-0 h-full w-full opacity-20 mix-blend-luminosity" sizes="100vw" />
-          <div className="absolute inset-0 bg-gradient-to-l from-brand-600 via-brand-600/90 to-brand-600/40" />
+        <Reveal className="navy-surface relative overflow-hidden rounded-[2rem] px-6 py-12 text-white sm:px-12 sm:py-16">
+          <Photo src={PHOTOS.repairMat} alt="" className="absolute inset-y-0 left-0 hidden h-full w-1/2 opacity-30 mix-blend-luminosity md:block" sizes="50vw" />
+          <div className="absolute inset-0 bg-gradient-to-l from-brand-800/90 via-brand-800/60 to-brand-800/10" />
           <div className="relative max-w-xl">
             <h2 className="text-3xl font-bold leading-tight sm:text-4xl">{title}</h2>
             <p className="mt-4 text-lg text-white/80">{desc}</p>

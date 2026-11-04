@@ -8,7 +8,7 @@ const base =
   "inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none select-none whitespace-nowrap";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-brand-500 text-white hover:bg-brand-600 shadow-[0_8px_20px_-8px_rgb(43_75_242/0.6)]",
+  primary: "bg-brand-500 text-white hover:bg-brand-600 shadow-[0_8px_20px_-8px_rgb(35_48_143/0.6)]",
   dark: "bg-ink text-white hover:bg-ink/90",
   outline: "border border-ink/15 bg-white text-ink hover:border-ink/30 hover:bg-white",
   ghost: "text-ink hover:bg-ink/5",

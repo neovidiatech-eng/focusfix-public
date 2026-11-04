@@ -12,16 +12,16 @@
   --color-ink-3: #8a8f9c;
   --color-line: #e4e0d6;
 
-  /* Brand cobalt (derived from the navy logo) */
-  --color-brand-50: #eef1ff;
-  --color-brand-100: #dbe1ff;
-  --color-brand-200: #b8c3ff;
-  --color-brand-400: #5b74ff;
-  --color-brand-500: #2b4bf2;
-  --color-brand-600: #1f39d1;
-  --color-brand-700: #182ca3;
-  --color-brand-800: #13207a;
-  --color-brand-900: #0d1650;
+  /* Brand navy (sampled from the FOCUS logo) */
+  --color-brand-50: #eef0fa;
+  --color-brand-100: #dce0f5;
+  --color-brand-200: #b6bfe9;
+  --color-brand-400: #4b59bd;
+  --color-brand-500: #23308f;
+  --color-brand-600: #1b2679;
+  --color-brand-700: #161f63;
+  --color-brand-800: #11184d;
+  --color-brand-900: #0b1036;
 
   /* Accent tangerine — used sparingly for offers and highlights */
   --color-accent-50: #fff3e9;
@@ -100,6 +100,14 @@ h1, h2, h3, h4 {
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* Subtle paper grain behind hero sections */
+/* Clean dark navy with a soft brand glow (footer, CTA band) */
+.navy-surface {
+  background-color: var(--color-brand-900);
+  background-image:
+    radial-gradient(60rem 30rem at 100% 0%, rgb(35 48 143 / 0.55), transparent 60%),
+    radial-gradient(40rem 24rem at 0% 100%, rgb(75 89 189 / 0.25), transparent 60%);
+}
+
 .grain {
   background-image: radial-gradient(rgb(18 20 28 / 0.045) 1px, transparent 1px);
   background-size: 18px 18px;

@@ -48,6 +48,7 @@ export interface DeviceType {
   name_en: string;
   is_coming_soon: boolean;
   intro_ar: string | null;
+  image_url: string | null;
   seo_h1_ar: string | null;
 }
 
@@ -58,6 +59,8 @@ export interface Service {
   name_en: string;
   estimated_minutes: number;
   default_warranty_days: number;
+  image_url: string | null;
+  description_ar: string | null;
 }
 
 export interface PriceCell {
@@ -74,6 +77,7 @@ export interface PriceModel {
   name: string;
   slug: string;
   releaseYear: number;
+  imageUrl: string | null;
   cells: Record<string, PriceCell>;
 }
 
@@ -83,10 +87,12 @@ export interface PriceColumn {
   name_ar: string;
   name_en: string;
   estimatedMinutes: number;
+  imageUrl: string | null;
+  description_ar: string | null;
 }
 
 export interface PriceMatrix {
-  deviceType: { id: string; slug: string; name_ar: string; name_en: string };
+  deviceType: { id: string; slug: string; name_ar: string; name_en: string; imageUrl: string | null };
   columns: PriceColumn[];
   series: Array<{ title: string; models: PriceModel[] }>;
 }

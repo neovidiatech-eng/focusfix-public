@@ -14,6 +14,7 @@ import { API_BASE_URL } from "@/src/shared/utils/site";
 import { whatsappHref } from "@/src/shared/utils/settings";
 import { useSiteSettings } from "@/src/providers/SiteSettingsProvider";
 import { cn } from "@/src/shared/utils/utils";
+import { DeviceImage, kindOf } from "@/src/components/ui/DeviceImage";
 
 interface Props {
   catalog: Array<{ type: DeviceType; matrix: PriceMatrix }>;
@@ -101,7 +102,7 @@ export function BookingFlow({ catalog, areas }: Props) {
       if (!cell || (cell.status !== "available" && cell.status !== "on_request")) return [];
       const price = cellPrice(cell);
       const original = cell.price ? Number(cell.price) : null;
-      return [{ id: col.id, slug: col.slug, name: col.name_ar, minutes: col.estimatedMinutes, warranty: cell.warrantyDays, note: cell.note_ar, price, original }];
+      return [{ id: col.id, slug: col.slug, name: col.name_ar, minutes: col.estimatedMinutes, warranty: cell.warrantyDays, note: cell.note_ar || col.description_ar, image: col.imageUrl, price, original }];
     });
   }, [current, model]);
 
@@ -320,19 +321,24 @@ export function BookingFlow({ catalog, areas }: Props) {
               {step === 0 && (
                 <div>
                   <StepTitle title="جهازك إيه؟" desc="اختار النوع والموديل عشان نوريك الأسعار الصح." />
-                  <div className="mb-4 flex gap-1.5 overflow-x-auto no-scrollbar">
-                    {catalog.map(({ type }) => (
+                  <div className="mb-5 grid grid-cols-3 gap-2 sm:gap-3">
+                    {catalog.map(({ type, matrix }) => (
                       <button
                         key={type.slug}
                         type="button"
+                        aria-pressed={type.slug === typeSlug}
                         onClick={() => {
                           setTypeSlug(type.slug);
                           setModelId(null);
                           setModelQuery("");
                         }}
-                        className={cn("shrink-0 rounded-full px-5 py-2.5 text-sm font-semibold", type.slug === typeSlug ? "bg-ink text-white" : "bg-paper text-ink-2")}
+                        className={cn(
+                          "flex flex-col items-center gap-2 rounded-2xl p-3 ring-1 transition-all",
+                          type.slug === typeSlug ? "bg-brand-50/70 ring-2 ring-brand-500" : "bg-paper/60 ring-transparent hover:ring-line",
+                        )}
                       >
-                        {type.name_en}
+                        <DeviceImage src={type.image_url || matrix.deviceType.imageUrl} alt={type.name_ar} kind={kindOf(type.slug)} className="h-16 w-16 sm:h-20 sm:w-20" />
+                        <span className="text-sm font-semibold">{type.name_en}</span>
                       </button>
                     ))}
                   </div>
@@ -352,11 +358,12 @@ export function BookingFlow({ catalog, areas }: Props) {
                         }}
                         aria-pressed={m.id === modelId}
                         className={cn(
-                          "rounded-xl px-3 py-3.5 text-center transition-all",
-                          m.id === modelId ? "bg-brand-500 text-white shadow-[0_8px_20px_-10px_rgb(43_75_242/0.8)]" : "bg-paper/70 hover:bg-brand-50",
+                          "flex flex-col items-center gap-1.5 rounded-xl px-2 py-3 text-center transition-all",
+                          m.id === modelId ? "bg-brand-500 text-white shadow-[0_8px_20px_-10px_rgb(35_48_143/0.8)]" : "bg-paper/70 hover:bg-brand-50",
                         )}
                       >
-                        <span className="block text-[15px] font-semibold" dir="ltr">{m.name}</span>
+                        <DeviceImage src={m.imageUrl} alt="" kind={kindOf(typeSlug)} className={cn("h-14 w-14 rounded-lg", m.id === modelId ? "bg-white" : "")} />
+                        <span className="block text-[14px] font-semibold leading-tight" dir="ltr">{m.name}</span>
                       </button>
                     ))}
                     {filteredModels.length === 0 && (
@@ -396,6 +403,10 @@ export function BookingFlow({ catalog, areas }: Props) {
                             <span className={cn("grid h-6 w-6 shrink-0 place-items-center rounded-md border-2 transition-colors", on ? "border-brand-500 bg-brand-500 text-white" : "border-ink/20")}>
                               {on && <Check className="h-4 w-4" />}
                             </span>
+                            {s.image && (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={s.image} alt="" loading="lazy" className="hidden h-14 w-14 shrink-0 rounded-xl object-cover sm:block" />
+                            )}
                             <span className="min-w-0 flex-1">
                               <span className="block font-semibold">{s.name}</span>
                               <span className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[13px] text-ink-3">
@@ -642,7 +653,7 @@ function NextButton({ step, canNext, submitting, onNext, onBlocked, className }:
       aria-disabled={!canNext}
       className={cn(
         "inline-flex h-12 items-center justify-center gap-2 rounded-full px-7 font-semibold text-white transition-all",
-        canNext ? "bg-brand-500 hover:bg-brand-600 shadow-[0_8px_20px_-8px_rgb(43_75_242/0.6)]" : "bg-ink/25",
+        canNext ? "bg-brand-500 hover:bg-brand-600 shadow-[0_8px_20px_-8px_rgb(35_48_143/0.6)]" : "bg-ink/25",
         className,
       )}
     >

@@ -6,8 +6,13 @@ import { AnimatePresence, motion } from "motion/react";
 import { Search, ArrowLeft, Clock, ShieldCheck, ChevronDown } from "lucide-react";
 import type { PriceMatrix, DeviceType } from "@/src/lib/api";
 import { cellPrice } from "@/src/lib/api";
+import type { PriceModel } from "@/src/lib/api";
+
+// Open on a model that already has prices, not one still "after inspection"
+const firstPriced = (models: PriceModel[]) => models.find((m) => Object.values(m.cells).some((c) => cellPrice(c) !== null)) || models[0];
 import { egp, warrantyLabel } from "@/src/lib/format";
 import { cn } from "@/src/shared/utils/utils";
+import { DeviceImage, kindOf } from "@/src/components/ui/DeviceImage";
 
 interface Props {
   data: Array<{ type: DeviceType; matrix: PriceMatrix }>;
@@ -18,7 +23,7 @@ export function PriceChecker({ data }: Props) {
   const [typeSlug, setTypeSlug] = useState(data[0]?.type.slug || "");
   const current = data.find((d) => d.type.slug === typeSlug) || data[0];
   const models = useMemo(() => current?.matrix.series.flatMap((s) => s.models) || [], [current]);
-  const [modelId, setModelId] = useState<string>(models[0]?.id || "");
+  const [modelId, setModelId] = useState<string>(firstPriced(models)?.id || "");
   const [query, setQuery] = useState("");
   const [picking, setPicking] = useState(false);
   const model = models.find((m) => m.id === modelId) || models[0];
@@ -42,7 +47,7 @@ export function PriceChecker({ data }: Props) {
               aria-selected={type.slug === current.type.slug}
               onClick={() => {
                 setTypeSlug(type.slug);
-                const first = data.find((d) => d.type.slug === type.slug)?.matrix.series[0]?.models[0];
+                const first = firstPriced(data.find((d) => d.type.slug === type.slug)?.matrix.series.flatMap((s) => s.models) || []);
                 setModelId(first?.id || "");
                 setQuery("");
               }}
@@ -61,9 +66,10 @@ export function PriceChecker({ data }: Props) {
             type="button"
             onClick={() => setPicking((v) => !v)}
             aria-expanded={picking}
-            className="flex w-full items-center justify-between rounded-2xl border border-line bg-paper/60 px-4 py-3.5 text-start transition-colors hover:border-ink/20"
+            className="flex w-full items-center gap-3 rounded-2xl border border-line bg-paper/60 px-3 py-3 text-start transition-colors hover:border-ink/20"
           >
-            <span>
+            <DeviceImage src={model.imageUrl || current.matrix.deviceType.imageUrl} alt={model.name} kind={kindOf(current.type.slug)} className="h-14 w-14 shrink-0 rounded-xl bg-white" />
+            <span className="flex-1">
               <span className="block text-xs text-ink-3">موديل جهازك</span>
               <span className="mt-0.5 block font-display text-lg font-semibold" dir="ltr">{model.name}</span>
             </span>
@@ -101,12 +107,12 @@ export function PriceChecker({ data }: Props) {
                           setQuery("");
                         }}
                         className={cn(
-                          "w-full rounded-lg px-3 py-2.5 text-start text-[15px] hover:bg-paper",
+                          "flex w-full items-center gap-3 rounded-lg px-2 py-2 text-start text-[15px] hover:bg-paper",
                           m.id === model.id && "bg-brand-50 font-semibold text-brand-700",
                         )}
-                        dir="ltr"
                       >
-                        {m.name}
+                        <DeviceImage src={m.imageUrl} alt="" kind={kindOf(current.type.slug)} className="h-9 w-9 shrink-0 rounded-md bg-paper" />
+                        <span dir="ltr">{m.name}</span>
                       </button>
                     </li>
                   ))}

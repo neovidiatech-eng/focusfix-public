@@ -45,10 +45,10 @@ export default async function ServicesPage() {
         <div className="space-y-6">
           {services.map((s, i) => (
             <Reveal key={s.id} className="grid overflow-hidden rounded-[1.75rem] bg-white shadow-soft ring-1 ring-ink/5 md:grid-cols-2">
-              <Photo src={servicePhoto(s.slug)} alt={s.name_ar} aspect={4 / 3} className={`aspect-[4/3] h-full w-full md:aspect-auto ${i % 2 ? "md:order-last" : ""}`} sizes="(max-width: 768px) 100vw, 50vw" />
+              <Photo src={s.image_url || servicePhoto(s.slug)} alt={s.name_ar} aspect={4 / 3} className={`aspect-[4/3] h-full w-full md:aspect-auto ${i % 2 ? "md:order-last" : ""}`} sizes="(max-width: 768px) 100vw, 50vw" />
               <div className="flex flex-col justify-center p-6 sm:p-10">
                 <h2 className="text-2xl font-semibold sm:text-3xl">{s.name_ar}</h2>
-                <p className="mt-3 leading-relaxed text-ink-2">{DESCRIPTIONS[s.slug] || "إصلاح احترافي بقطع أصلية في مكانك، مع ضمان مكتوب على القطعة والتركيب."}</p>
+                <p className="mt-3 leading-relaxed text-ink-2">{s.description_ar || DESCRIPTIONS[s.slug] || "إصلاح احترافي بقطع أصلية في مكانك، مع ضمان مكتوب على القطعة والتركيب."}</p>
                 <ul className="mt-5 flex flex-wrap gap-2 text-sm text-ink-2">
                   <li className="inline-flex items-center gap-1.5 rounded-full bg-paper px-3 py-1.5"><Clock className="h-4 w-4 text-brand-500" />حوالي {s.estimated_minutes} دقيقة</li>
                   <li className="inline-flex items-center gap-1.5 rounded-full bg-paper px-3 py-1.5"><ShieldCheck className="h-4 w-4 text-brand-500" />{warrantyLabel(s.default_warranty_days)}</li>
@@ -73,7 +73,7 @@ export default async function ServicesPage() {
               {matrices.map(({ type, matrix }, i) => (
                 <Reveal key={type.slug} delay={i * 0.08}>
                   <Link href="/prices" className="group block overflow-hidden rounded-[1.5rem] bg-paper">
-                    <Photo src={deviceTypePhoto(type.slug)} alt={type.name_ar} aspect={1} className="aspect-square w-full transition-transform duration-700 group-hover:scale-105" sizes="33vw" />
+                    <Photo src={type.image_url || deviceTypePhoto(type.slug)} alt={type.name_ar} aspect={1} className="aspect-square w-full transition-transform duration-700 group-hover:scale-105" sizes="33vw" />
                     <div className="flex items-center justify-between p-5">
                       <div>
                         <h3 className="text-xl font-semibold">{type.name_en}</h3>
