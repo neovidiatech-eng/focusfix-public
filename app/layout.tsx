@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import type { Viewport } from "next";
 import { IBM_Plex_Sans_Arabic, Readex_Pro } from "next/font/google";
 import "./globals.css";
-import Script from "next/script";
+import { CustomCode } from "@/src/components/site/CustomCode";
 import { SITE_URL } from "@/src/shared/utils/site";
 import { getSiteSettings } from "@/src/shared/utils/settings";
 import { SiteSettingsProvider } from "@/src/providers/SiteSettingsProvider";
@@ -97,14 +97,8 @@ export default async function RootLayout({
   return (
     <html lang="ar" dir="rtl" className={`${body.variable} ${display.variable}`}>
       <head>
-        {/* Google Tag Manager */}
-        <Script id="gtm-script" strategy="afterInteractive">
-          {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-          new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-          j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-          'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-          })(window,document,'script','dataLayer','GTM-5VTRPS8J');`}
-        </Script>
+        {/* Tracking code from Dashboard → أكواد التتبع (GTM, Meta, TikTok, Google Ads…) */}
+        <CustomCode html={settings.code_head} place="head" />
 
         {/* JSON-LD Structured Data */}
         <script
@@ -198,17 +192,10 @@ export default async function RootLayout({
         />
       </head>
       <body>
-        {/* Google Tag Manager (noscript) */}
-        <noscript>
-          <iframe
-            src="https://www.googletagmanager.com/ns.html?id=GTM-5VTRPS8J"
-            height="0"
-            width="0"
-            style={{ display: "none", visibility: "hidden" }}
-          />
-        </noscript>
+        <CustomCode html={settings.code_body_open} place="body" />
 
         <SiteSettingsProvider settings={settings}>{children}</SiteSettingsProvider>
+        <CustomCode html={settings.code_footer} place="body" />
       </body>
     </html>
   );

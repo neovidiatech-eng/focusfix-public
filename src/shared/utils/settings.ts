@@ -15,6 +15,10 @@ export interface SiteSettings {
   banner_badge_en: string;
   banner_link: string;
   banner_bg_color: string;
+  /** Tracking code from the dashboard, injected in <head>, after <body> and before </body> */
+  code_head: string;
+  code_body_open: string;
+  code_footer: string;
   [key: string]: string;
 }
 
@@ -32,6 +36,10 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   banner_badge_en: "",
   banner_link: "/book",
   banner_bg_color: "from-amber-500 via-amber-400 to-amber-500",
+  // Empty here: the API's defaults carry the site's GTM container, so a missing API never injects stale code
+  code_head: "",
+  code_body_open: "",
+  code_footer: "",
 };
 
 /** Server-side fetch, cached and refreshed when the dashboard saves settings (tag "settings") */
