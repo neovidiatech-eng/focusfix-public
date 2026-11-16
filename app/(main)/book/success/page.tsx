@@ -30,6 +30,8 @@ function SuccessContent() {
   const token = params.get("token");
   const number = params.get("bookingNumber") || "";
   const [order, setOrder] = useState<Order | null>(null);
+  // Link opened without a matching booking (wrong / old token): don't claim success
+  const [missing, setMissing] = useState(false);
 
   useEffect(() => {
     try {
@@ -39,11 +41,11 @@ function SuccessContent() {
       // corrupted storage — fall through to the API
     }
     // Opened on another device: load the booking by its confirmation token
-    if (!token) return;
+    if (!token) return setMissing(true);
     fetch(`${API_BASE_URL}/bookings/confirmation/${encodeURIComponent(token)}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((b) => {
-        if (!b) return;
+        if (!b) return setMissing(true);
         setOrder({
           bookingNumber: b.bookingNumber,
           device: b.device,
@@ -54,7 +56,7 @@ function SuccessContent() {
           services: (b.services || []).map((x: { name: string }) => x.name),
         });
       })
-      .catch(() => {});
+      .catch(() => setMissing(true));
   }, [number, token]);
 
   const bookingNumber = order?.bookingNumber || number;
@@ -84,6 +86,21 @@ function SuccessContent() {
     a.click();
     URL.revokeObjectURL(a.href);
   };
+
+  if (missing) {
+    return (
+      <div className="grain min-h-screen pt-28 pb-32 sm:pt-36">
+        <Container className="max-w-xl text-center">
+          <h1 className="text-3xl font-bold">مش لاقيين الحجز ده</h1>
+          <p className="mt-3 text-lg text-ink-2">اللينك ده قديم أو ناقص. لو حجزت، تقدر تتابع حجزك برقم الحجز ورقم موبايلك.</p>
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+            <ButtonLink href="/track" size="lg"><Search className="h-4 w-4" /> تتبع حجزك</ButtonLink>
+            <ButtonLink href="/book" variant="outline" size="lg">احجز من جديد</ButtonLink>
+          </div>
+        </Container>
+      </div>
+    );
+  }
 
   return (
     <div className="grain min-h-screen pt-28 pb-32 sm:pt-36">
